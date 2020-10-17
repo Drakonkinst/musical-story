@@ -101,7 +101,6 @@ const YTVideoPlayer = (function () {
             return;
         }
         
-        let percent = progress / 100;
         let seconds = progress * player.getDuration() / 100;
         
         //$(".percent-display").text(parseFloat(progress).toFixed(2) + "%");
@@ -118,7 +117,6 @@ const YTVideoPlayer = (function () {
     function pause() {
         console.log("Paused!");
         player.pauseVideo();
-        stopVideo();
     }
     
     function prev() {
