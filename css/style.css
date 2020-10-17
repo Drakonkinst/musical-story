@@ -13,6 +13,11 @@ iframe#ytplayer {
     display: none;
 }
 
+/* SOUNDCLOUD PLAYER */
+iframe#scplayer {
+    display: none;
+}
+
 /* CONTROLS */
 .progress-bar-container {
     margin: 20px;

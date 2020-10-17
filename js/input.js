@@ -1,16 +1,18 @@
+"use strict";
+
 const Input = (function() {
     const DRAG_STOP_DELAY = 1000;
     let isDragging = false;
     let dragTask = "";
     
-    function createVolumeSlider() {
+    function createYTVolumeSlider() {
         function updateVal() {
             let val = parseInt(slider.val());
             YTVideoPlayer.setVolume(val);
-            $(".volume-level").text(val + "%");
+            $(".volume-control.yt").find(".volume-level").text(val + "%");
         }
-        let container = $("<div>").addClass("volume-control").appendTo($(".controls"));
-        $("<span>").text("Volume: ").appendTo(container);
+        let container = $("<div>").addClass("volume-control yt").appendTo($(".controls"));
+        $("<p>").text("YouTube Volume: ").appendTo(container);
         $("<span>").addClass("volume-level").appendTo(container);
         let slider = $("<input type='range'>").attr({
             "name": "Volume",
@@ -23,6 +25,28 @@ const Input = (function() {
         }).appendTo(container);
 
         updateVal();   
+    }
+    
+    function createSCVolumeSlider() {
+        function updateVal() {
+            let val = parseInt(slider.val());
+            SCPlayer.setVolume(val);
+            $(".volume-control.sc").find(".volume-level").text(val + "%");
+        }
+        let container = $("<div>").addClass("volume-control sc").appendTo($(".controls"));
+        $("<p>").text("SoundCloud Volume: ").appendTo(container);
+        $("<span>").addClass("volume-level").appendTo(container);
+        let slider = $("<input type='range'>").attr({
+            "name": "Volume",
+            "min": 0,
+            "max": 100,
+            "value": SCPlayer.getVolume(),
+            "step": 1
+        }).on("input", function () {
+            updateVal();
+        }).appendTo(container);
+
+        updateVal();
     }
     
     function createProgressControls() {
@@ -77,8 +101,12 @@ const Input = (function() {
     }
     
     function createYTControls() {
-        createVolumeSlider();
+        createYTVolumeSlider();
         createProgressControls();
+    }
+    
+    function createSCControls() {
+        createSCVolumeSlider();
     }
     
     function resetDragging() {
@@ -101,6 +129,7 @@ const Input = (function() {
     
     return {
         createYTControls,
+        createSCControls,
         isDraggingMouse,
         getDragTask
     };

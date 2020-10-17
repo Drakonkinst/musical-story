@@ -4,13 +4,13 @@
 <head>
   <meta charset="utf-8">
   <title>Music Hours</title>
-  
+
   <meta name="keywords" content="music, creation, creators">
   <meta name="description" content="Description.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json" />
   <meta name="robots" , content="index, follow">
-  
+
   <!-- Open Graph -->
   <meta property="og:type" content="article" />
   <meta property="og:title" content="TITLE OF YOUR POST OR PAGE" />
@@ -18,14 +18,14 @@
   <meta property="og:image" content="LINK TO THE IMAGE FILE" />
   <meta property="og:url" content="PERMALINK" />
   <meta property="og:site_name" content="SITE NAME" />
-  
+
   <!-- Twitter -->
   <meta name="twitter:title" content="TITLE OF POST OR PAGE">
   <meta name="twitter:description" content="DESCRIPTION OF PAGE CONTENT">
   <meta name="twitter:image" content="LINK TO IMAGE">
   <meta name="twitter:site" content="@USERNAME">
   <meta name="twitter:creator" content="@USERNAME">
-  
+
   <!-- Place favicon.ico in the root directory -->
 
   <link rel="stylesheet" href="css/normalize.css">
@@ -36,39 +36,58 @@
 </head>
 
 <body>
-    <!--[if IE]>
+  <!--[if IE]>
       <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/?locale=en">upgrade your browser</a> to improve your experience and security.</p>
     <![endif]-->
-  
-    <!-- Add your site or application content here -->
-    <div id="ytplayer"></div>
-    
-    <div class="content">
-      <div class="display">
-        <!--<div class="percent-display"></div>-->
-        <div class="progress"></div>
-        <div class="progress-bar-container">
-          <div class="progress-bar-background">
-            <div class="progress-bar"></div>
-          </div>
+
+  <!-- Add your site or application content here -->
+  <div id="ytplayer"></div>
+  <div class="scplayer-container">
+    <iframe id="scplayer" width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay"
+      src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/501938133"></iframe>
+      
+      <!-- kieutown: 501938133-->
+      <!-- KDA: 880233430-->
+  </div>
+
+  <div class="content">
+    <div class="display">
+      <!--<div class="percent-display"></div>-->
+      <div class="progress"></div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-background">
+          <div class="progress-bar"></div>
         </div>
       </div>
-      <div class="controls">
-        <button onclick="YTVideoPlayer.play()">Play</button>
-        <button onclick="YTVideoPlayer.pause()">Pause</button>
-        <button onclick="YTVideoPlayer.prev()">Prev</button>
-        <button onclick="YTVideoPlayer.next()">Next</button>
-      </div>
+    </div>
+    <div class="controls">
+      <p>YouTube Player</p>
+      <button onclick="YTVideoPlayer.play()">Play</button>
+      <button onclick="YTVideoPlayer.pause()">Pause</button>
+      <button onclick="YTVideoPlayer.prev()">Prev</button>
+      <button onclick="YTVideoPlayer.next()">Next</button>
+      <p>SoundCloud Player</p>
+      <button onclick="SCPlayer.play()">Play</button>
+      <button onclick="SCPlayer.pause()">Pause</button>
+      <button onclick="SCPlayer.prev()">Prev</button>
+      <button onclick="SCPlayer.next()">Next</button>
+      <button onclick="SCPlayer.checkName()">Check Name</button>
     </div>
     
-    <script src="js/lib/modernizr-3.8.0.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-      integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
-    <script>window.jQuery || document.write('<script src="js/lib/jquery-3.4.1.min.js"><\/script>')</script>
-    <script src="js/input.js"></script>
-    <script src="js/ytplayer.js"></script>
-    <script src="js/main.js"></script>
-  </body>
+    
+  </div>
+
+  <script src="js/lib/modernizr-3.8.0.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+    integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+  <script>window.jQuery || document.write('<script src="js/lib/jquery-3.4.1.min.js"><\/script>')</script>
+  <script src="js/lib/sc-widget-min.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/ytplayer.js"></script>
+  <script src="js/scplayer.js"></script>
+  <script src="js/main.js"></script>
+</body>
 
 </html>

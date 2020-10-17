@@ -1,4 +1,7 @@
-$(document).ready(function () {
+"use strict";
+
+$(function () {
     YTVideoPlayer.init();
+    SCPlayer.init();
     console.log("Document loaded!");
 });

@@ -1,3 +1,5 @@
+"use strict";
+
 const YTVideoPlayer = (function () {
     let player;
     let done = false;
@@ -72,7 +74,7 @@ const YTVideoPlayer = (function () {
 
         setInterval(updateDisplay, 100);
         
-        setTimeout(play, 500);
+        //setTimeout(play, 500);
 
         Input.createYTControls();
     }
@@ -193,4 +195,6 @@ const YTVideoPlayer = (function () {
 })();
 
 // Creates an <iframe> (and YouTube player) after the API loads.
-onYouTubeIframeAPIReady = YTVideoPlayer.initPlayer;
+function onYouTubeIframeAPIReady() {
+    YTVideoPlayer.initPlayer();
+}
