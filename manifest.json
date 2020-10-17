@@ -1,0 +1,11 @@
+{
+    "name": "Music Hours",
+    "short_name": "Music Hours",
+    "description": "A very helpful description",
+    "start_url": "/",
+    "background_color": "#000000",
+    "theme_color": "#0f4a73",
+    "icons": [{
+        
+    }]
+}
