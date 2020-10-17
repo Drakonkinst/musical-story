@@ -5,11 +5,8 @@ const SCPlayer = (function() {
     
     function init() {
         widget = SC.Widget("scplayer");
-        console.log(widget);
-        console.log("Widget loaded!");
-        
         widget.bind(SC.Widget.Events.READY, onPlayerReady);
-        
+        console.log("Widget loaded!");
     }
     
     function onPlayerReady() {
