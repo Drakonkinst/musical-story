@@ -13,7 +13,7 @@ const Input = (function() {
         }
         let container = $("<div>").addClass("volume-control yt").appendTo($(".controls"));
         $("<p>").text("YouTube Volume: ").appendTo(container);
-        $("<span>").addClass("volume-level").appendTo(container);
+        $("<div>").addClass("volume-level").appendTo(container);
         let slider = $("<input type='range'>").attr({
             "name": "Volume",
             "min": 0,
@@ -35,7 +35,7 @@ const Input = (function() {
         }
         let container = $("<div>").addClass("volume-control sc").appendTo($(".controls"));
         $("<p>").text("SoundCloud Volume: ").appendTo(container);
-        $("<span>").addClass("volume-level").appendTo(container);
+        $("<div>").addClass("volume-level").appendTo(container);
         let slider = $("<input type='range'>").attr({
             "name": "Volume",
             "min": 0,

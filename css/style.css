@@ -54,3 +54,8 @@ iframe#scplayer {
 .volume-control {
     margin: 20px;
 }
+
+.volume-level {
+    width: 40px;
+    float: left;
+}
