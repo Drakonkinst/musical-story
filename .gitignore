@@ -5,3 +5,5 @@
 .editorconfig
 server.bat
 devlogs/*
+__pycache__/*
+cors-server.py

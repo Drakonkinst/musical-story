@@ -43,6 +43,20 @@ const YTVideoPlayer = (function () {
         console.log(secondsToTimeStr(player.getDuration()));
     }
     
+    function getSongDataFromURL(url, callback) {
+        console.log("Attempt to request data from YouTube");
+        $.get("http://www.youtube.com/oembed?url=" + url + "&format=json", function (data) {
+            console.log(data);
+            /*
+            let iFrameData = data.substring(1, data.length - 2);
+            let decoded = JSON.parse(iFrameData);
+            decoded.url = url;
+            if(callback) {
+                callback(decoded);
+            }*/
+        });
+    }
+    
     /* INIT */
     function init() {
         // Loads the IFrame Player API code asynchronously.
@@ -50,6 +64,10 @@ const YTVideoPlayer = (function () {
         tag.src = "https://www.youtube.com/iframe_api";
         let firstScriptTag = document.getElementsByTagName("script")[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        
+        getSongDataFromURL("https://www.youtube.com/watch?v=dQw4w9WgXcQ", function() {
+            console.log("Did it work?");
+        });
     }
     
     function initPlayer() {

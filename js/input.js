@@ -11,6 +11,7 @@ const Input = (function() {
             YTVideoPlayer.setVolume(val);
             $(".volume-control.yt").find(".volume-level").text(val + "%");
         }
+        
         let container = $("<div>").addClass("volume-control yt").appendTo($(".controls"));
         $("<p>").text("YouTube Volume: ").appendTo(container);
         $("<div>").addClass("volume-level").appendTo(container);
@@ -33,6 +34,7 @@ const Input = (function() {
             SCPlayer.setVolume(val);
             $(".volume-control.sc").find(".volume-level").text(val + "%");
         }
+        
         let container = $("<div>").addClass("volume-control sc").appendTo($(".controls"));
         $("<p>").text("SoundCloud Volume: ").appendTo(container);
         $("<div>").addClass("volume-level").appendTo(container);
