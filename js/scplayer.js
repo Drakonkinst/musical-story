@@ -2,7 +2,12 @@
 
 const SCPlayer = (function() {
     const SCWidget = SCEmbed.Widget;
+    const MILLISECONDS_TO_SECONDS = 1 / 1000;
+    const SECONDS_TO_MILLISECONDS = 1000;
+    
     let widget;
+    let lastVolume = 0;
+    let muted = false;
     
     let songList = [
         "https://soundcloud.com/kieutown/story",
@@ -49,6 +54,10 @@ const SCPlayer = (function() {
         });*/
     }
     
+    function millisecondsToSeconds(milliseconds) {
+        return Math.round(milliseconds * MILLISECONDS_TO_SECONDS);
+    }
+    
     // not sure if this snippet actually works
     function validateURL(url) {
         let pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
@@ -77,13 +86,28 @@ const SCPlayer = (function() {
     
     function onPlayerReady() {
         //widget.play();
-        console.log("SC: Player ready!");
+        PM.onPlayerReady("SC");
         widget.bind(SCWidget.Events.PLAY, function () {
-            console.log("Began playing!");
+            //console.log("Began playing!");
         });
-        Input.createSCControls();
     }
     
+    function updateCurrentVideo() {
+        widget.load(songList[songIndex], {
+            callback: play
+        });
+    }
+    
+    function checkName() {
+        widget.getCurrentSound(function (music) {
+            console.log("Now Playing: " + music.title);
+            console.log("by " + music.user.permalink + " (" + music.user.full_name + ")");
+            console.log(music.description);
+
+        });
+    }
+    
+    /* PLAYER METHODS */
     function play() {
         console.log("SC: Play command called");
         widget.play();
@@ -93,47 +117,78 @@ const SCPlayer = (function() {
         widget.pause();
     }
     
-    function updateCurrentVideo() {
-        widget.load(songList[songIndex], {
-            callback: play
-        });
+    function next() {
+        songIndex = (songIndex + 1) % songList.length;
+        updateCurrentVideo();
     }
     
     function prev() {
         songIndex = (songIndex - 1 + songList.length) % songList.length;
         updateCurrentVideo();
     }
-
-    function next() {
-        songIndex = (songIndex + 1) % songList.length;
-        updateCurrentVideo();
-    }
-    
-    function checkName() {
-        widget.getCurrentSound(function (music) {
-            console.log("Now Playing: " + music.title);
-            console.log("by " + music.user.permalink + " (" + music.user.full_name + ")");
-            console.log(music.description);
-            
-        });
-    }
-    
-    function getVolume() {
-        return widget.getVolume();
-    }
     
     function setVolume(percent) {
         widget.setVolume(percent);
     }
     
+    function setMute(flag) {
+        if(muted == flag) {
+            return;
+        }
+        
+        muted = flag;
+        if(flag) {
+            lastVolume = getVolume();
+            setVolume(0);
+        } else {
+            setVolume(lastVolume);
+        }
+    }
+    
+    function seekTo(seconds, allowSeekAhead) {
+        widget.seekTo(seconds * SECONDS_TO_MILLISECONDS);
+    }
+    
+    function getVolume(callback) {
+        return widget.getVolume(callback);
+    }
+    
+    function isMuted(callback) {
+        callback(muted);
+        return muted;
+    }
+    
+    function isPaused(callback) {
+        return widget.isPaused(callback);
+    }
+    
+    function getDuration(callback) {
+        return widget.getDuration(function(timeMS) {
+            callback(millisecondsToSeconds(timeMS));
+        });
+    }
+    
+    function getCurrentTime(callback) {
+        return widget.getPosition(function(timeMS) {
+            callback(millisecondsToSeconds(timeMS));
+        });
+    }
+    
     return {
         init,
+        checkName,
+        
         play,
         pause,
-        prev,
         next,
-        checkName,
+        prev,
+        setVolume,
+        setMute,
+        seekTo,
         getVolume,
-        setVolume
+        isPaused,
+        isMuted,
+        getDuration,
+        getCurrentTime
     };
 })();

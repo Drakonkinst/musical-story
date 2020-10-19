@@ -61,17 +61,15 @@
       </div>
     </div>
     <div class="controls">
-      <p>YouTube Player</p>
-      <button onclick="YTVideoPlayer.play()">Play</button>
-      <button onclick="YTVideoPlayer.pause()">Pause</button>
-      <button onclick="YTVideoPlayer.prev()">Prev</button>
-      <button onclick="YTVideoPlayer.next()">Next</button>
-      <p>SoundCloud Player</p>
-      <button onclick="SCPlayer.play()">Play</button>
-      <button onclick="SCPlayer.pause()">Pause</button>
-      <button onclick="SCPlayer.prev()">Prev</button>
-      <button onclick="SCPlayer.next()">Next</button>
-      <button onclick="SCPlayer.checkName()">Check Name</button>
+      <p>Change Player</p>
+      <button onclick="PM.setPlayer(YTVideoPlayer)">YouTube (4 songs)</button>
+      <button onclick="PM.setPlayer(SCPlayer)">SoundCloud (2 songs)</button>
+      <p>Player Controls</p>
+      <button onclick="PM.getPlayer().play()">Play</button>
+      <button onclick="PM.getPlayer().pause()">Pause</button>
+      <button onclick="PM.getPlayer().prev()">Prev</button>
+      <button onclick="PM.getPlayer().next()">Next</button>
+      <button onclick="SCPlayer.checkName()">Check Name (Debug)</button>
     </div>
     
     
@@ -85,6 +83,7 @@
   <script>window.jQuery || document.write('<script src="js/lib/jquery-3.4.1.min.js"><\/script>')</script>
   <script src="js/lib/sc-widget-min.js"></script>
   <!--<script src="https://connect.soundcloud.com/sdk/sdk-3.3.2.js"></script>-->
+  <script src="js/utils.js"></script>
   <script src="js/input.js"></script>
   <script src="js/ytplayer.js"></script>
   <script src="js/scplayer.js"></script>

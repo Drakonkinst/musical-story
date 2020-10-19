@@ -3,9 +3,13 @@ body {
     height: 100%;    
 }
 
+p {
+    margin: 10px 0;
+}
+
 .content {
     position: relative;
-    padding: 20px;
+    padding: 40px;
 }
 
 /* YOUTUBE PLAYER */
@@ -20,11 +24,11 @@ iframe#scplayer {
 
 /* CONTROLS */
 .progress-bar-container {
-    margin: 20px;
+    margin: 20px 0;
 }
 
 .progress-bar-background {
-    width: 75%;
+    width: 100%;
     background-color: #cccccc;
     -webkit-transition: all 0.3s ease;
     -moz-transition: all 0.3s ease;
@@ -52,7 +56,7 @@ iframe#scplayer {
 }
 
 .volume-control {
-    margin: 20px;
+    margin-top: 15px;
 }
 
 .volume-level {

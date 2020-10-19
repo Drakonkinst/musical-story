@@ -1,54 +1,49 @@
 "use strict";
 
 const Input = (function() {
-    const DRAG_STOP_DELAY = 1000;
     let isDragging = false;
     let dragTask = "";
     
-    function createYTVolumeSlider() {
-        function updateVal() {
-            let val = parseInt(slider.val());
-            YTVideoPlayer.setVolume(val);
-            $(".volume-control.yt").find(".volume-level").text(val + "%");
+    /* HELPERS */
+    function clamp(num, min, max) {
+        if(num < min) {
+            num = min;
+        } else if(num > max) {
+            num = max;
         }
-        
-        let container = $("<div>").addClass("volume-control yt").appendTo($(".controls"));
-        $("<p>").text("YouTube Volume: ").appendTo(container);
-        $("<div>").addClass("volume-level").appendTo(container);
-        let slider = $("<input type='range'>").attr({
-            "name": "Volume",
-            "min": 0,
-            "max": 100,
-            "value": YTVideoPlayer.getVolume(),
-            "step": 1
-        }).on("input", function () {
-            updateVal();
-        }).appendTo(container);
-
-        updateVal();   
     }
     
-    function createSCVolumeSlider() {
+    function resetDragging() {
+        isDragging = false;
+        dragTask = "";
+    }
+    
+    /* CREATE UI */
+    function createVolumeSlider() {
         function updateVal() {
             let val = parseInt(slider.val());
-            SCPlayer.setVolume(val);
-            $(".volume-control.sc").find(".volume-level").text(val + "%");
+            PM.getPlayer().setVolume(val);
+            level.text(val + "%");
         }
         
-        let container = $("<div>").addClass("volume-control sc").appendTo($(".controls"));
-        $("<p>").text("SoundCloud Volume: ").appendTo(container);
-        $("<div>").addClass("volume-level").appendTo(container);
-        let slider = $("<input type='range'>").attr({
-            "name": "Volume",
-            "min": 0,
-            "max": 100,
-            "value": SCPlayer.getVolume(),
-            "step": 1
-        }).on("input", function () {
-            updateVal();
-        }).appendTo(container);
+        let level;
+        let slider;
+        PM.getPlayer().getVolume(function(volume) {
+            let container = $("<div>").addClass("volume-control").appendTo($(".controls"));
+            $("<p>").text("Volume: ").appendTo(container);
+            level = $("<div>").addClass("volume-level").appendTo(container);
+            slider = $("<input type='range'>").attr({
+                "name": "Volume",
+                "min": 0,
+                "max": 100,
+                "value": volume,
+                "step": 1
+            }).on("input", function () {
+                updateVal();
+            }).appendTo(container);
 
-        updateVal();
+            updateVal();
+        });
     }
     
     function createProgressControls() {
@@ -60,6 +55,13 @@ const Input = (function() {
             return false;
         });
         
+        function setVideoProgress(progress, allowSeekAhead) {
+            PM.setProgressDisplay(progress * 100);
+            PM.getPlayer().getDuration(function(duration) {
+                PM.getPlayer().seekTo(progress * duration, allowSeekAhead);
+            });
+        }
+        
         $(window).mousemove(function(e) {
             if(!isDragging || dragTask !== "progress") {
                 return;
@@ -67,16 +69,9 @@ const Input = (function() {
             
             let el = $(".progress-bar-background");
             let posX = e.pageX - el.position().left;
-            let progress = posX / el.width();
+            let progress = clamp(posX / el.width(), 0.0, 1.0);
 
-            if(progress < 0) {
-                progress = 0;
-            } else if(progress > 1.0) {
-                progress = 1.0;
-            }
-
-            YTVideoPlayer.setProgressDisplay(progress * 100);
-            YTVideoPlayer.setProgress(progress);
+            setVideoProgress(progress, false);
         }).mouseup(function(e) {
             if(!isDragging || dragTask !== "progress") {
                 return;
@@ -84,43 +79,23 @@ const Input = (function() {
             
             let el = $(".progress-bar-background");
             let posX = e.pageX - el.position().left;
-            let progress = posX / el.width();
+            let progress = clamp(posX / el.width(), 0.0, 1.0);
 
-            if(progress < 0) {
-                progress = 0;
-            } else if(progress > 1.0) {
-                progress = 1.0;
-            }
-
-            YTVideoPlayer.setProgressDisplay(progress * 100);
-            YTVideoPlayer.setProgress(progress);
+            setVideoProgress(progress, true);
             resetDragging();    
         });
         
         $(window).blur(function() {
             resetDragging();
-        })
+        });
     }
     
-    function createYTControls() {
-        createYTVolumeSlider();
+    function createControls() {
+        createVolumeSlider();
         createProgressControls();
     }
     
-    function createSCControls() {
-        createSCVolumeSlider();
-    }
-    
-    function resetDragging() {
-        isDragging = false;
-        dragTask = "";
-        /*
-        setTimeout(function() {
-            
-        }, DRAG_STOP_DELAY);
-        */
-    }
-    
+    /* ACCESSORS */
     function isDraggingMouse() {
         return isDragging;
     }
@@ -130,8 +105,7 @@ const Input = (function() {
     }
     
     return {
-        createYTControls,
-        createSCControls,
+        createControls,
         isDraggingMouse,
         getDragTask
     };

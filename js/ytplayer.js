@@ -2,17 +2,16 @@
 
 const YTVideoPlayer = (function () {
     let player;
-    let done = false;
     let currentId = "";
     
     let songList = [
         "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         "https://www.youtube.com/watch?v=5D4gzZNOwU4",
-        "https://www.youtube.com/watch?v=HbkR_y_QMnw"
-        
+        "https://www.youtube.com/watch?v=HbkR_y_QMnw",
+        "https://www.youtube.com/watch?v=uq84RuBo2kg"
+        //"https://www.youtube.com/watch?v=yCNUP2NAt-A"
     ];
     let songIndex = 0;
-    let currentDuration = 0;
 
     /* HELPERS */
     function extractIdFromURL(url) {
@@ -21,26 +20,9 @@ const YTVideoPlayer = (function () {
         return id;
     }
     
-    function secondsToTimeStr(seconds) {
-        seconds = ~~seconds;
-        let hours = ~~(seconds / (60 * 60));
-        seconds %= (60 * 60);
-        let minutes = ~~(seconds / 60);
-        seconds %= 60;
-        
-        let str = "";
-        const zeroes = "00";
-        if(hours > 0) {
-            str += hours + ":";
-        }
-        str += minutes + ":" + (zeroes + seconds).slice(-2);
-        return str;
-    }
-    
     function updateCurrentVideo() {
         loadVideoById(extractIdFromURL(songList[songIndex]));
         //cueVideoById(extractIdFromURL(songList[songIndex]));
-        console.log(secondsToTimeStr(player.getDuration()));
     }
     
     function getSongDataFromURL(url, callback) {
@@ -74,10 +56,9 @@ const YTVideoPlayer = (function () {
         let firstVideoID = extractIdFromURL(songList[songIndex]);
         setCurrentId(firstVideoID);
         player = new YT.Player("ytplayer", {
-            height: "0", //"390",
-            width: "0", //"640",
+            height: "0",
+            width: "0",
             videoId: firstVideoID,
-            //"M7lc1UVf-VE",
             events: {
                 "onReady": onPlayerReady,
                 "onStateChange": onPlayerStateChange
@@ -87,14 +68,7 @@ const YTVideoPlayer = (function () {
     
     /* EVENTS */
     function onPlayerReady(event) {
-        
-        console.log("Player is ready!");
-
-        setInterval(updateDisplay, 100);
-        
-        //setTimeout(play, 500);
-
-        Input.createYTControls();
+        PM.onPlayerReady("YT");
     }
 
     function onPlayerStateChange(event) {
@@ -106,54 +80,7 @@ const YTVideoPlayer = (function () {
         }*/
     }
     
-    function updateDisplay() {
-        if(Input.getDragTask() === "progress") {
-            return;
-        }
-        
-        let progress = getVideoProgress();
-        setProgressDisplay(progress);
-    }
-    
-    // visual change only
-    function setProgressDisplay(progress) {
-        if(isNaN(progress)) {
-            return;
-        }
-        
-        let seconds = progress * player.getDuration() / 100;
-        
-        //$(".percent-display").text(parseFloat(progress).toFixed(2) + "%");
-        $(".progress").text(secondsToTimeStr(seconds) + " / " + secondsToTimeStr(player.getDuration()));
-        $(".progress-bar").css("width", progress + "%");
-    }
-
     /* CONTROLS */
-    function play() {
-        console.log("Playing!");
-        player.playVideo();
-    }
-
-    function pause() {
-        console.log("Paused!");
-        player.pauseVideo();
-    }
-    
-    function prev() {
-        songIndex = (songIndex - 1 + songList.length) % songList.length;
-        updateCurrentVideo();
-    }
-    
-    function next() {
-        songIndex = (songIndex + 1) % songList.length;
-        updateCurrentVideo();
-    }
-
-    function stopVideo() {
-        player.stopVideo();
-        
-    }
-
     function setCurrentId(id) {
         currentId = id;
         console.log("Now playing: " + id);
@@ -168,23 +95,7 @@ const YTVideoPlayer = (function () {
         setCurrentId(id);
         player.loadVideoById(id);
     }
-
-    function setVolume(percent) {
-        player.setVolume(percent);
-    }
     
-    function setProgress(percent) {
-        player.seekTo(percent * player.getDuration());
-    }
-
-    /* ACCESSORS */
-    function getVolume() {
-        if(!player.getVolume) {
-            return -1;
-        }
-        return player.getVolume();
-    }
-
     function getVideoProgress() {
         let time = player.getCurrentTime();
 
@@ -192,23 +103,97 @@ const YTVideoPlayer = (function () {
         let duration = player.getDuration();
         return (time / duration * 100).toFixed(2);
     }
-
+    
     function getCurrentVideoId() {
         return currentId;
+    }
+
+    /* PLAYER METHODS */
+    function play() {
+        player.playVideo();
+    }
+
+    function pause() {
+        player.pauseVideo();
+    }
+    
+    function next() {
+        songIndex = (songIndex + 1) % songList.length;
+        updateCurrentVideo();
+    }
+    
+    function prev() {
+        songIndex = (songIndex - 1 + songList.length) % songList.length;
+        updateCurrentVideo();
+    }
+    
+    function setVolume(percent) {
+        player.setVolume(percent);
+    }
+    
+    function setMute(flag) {
+        if(flag) {
+            player.mute();
+        } else {
+            player.unMute();
+        }
+    }
+    
+    function seekTo(seconds, allowSeekAhead) {
+        player.seekTo(seconds, allowSeekAhead);
+    }
+    
+    function getVolume(callback) {
+        if(!player.getVolume) {
+            callback(-1);
+            return -1;
+        }
+        let val = player.getVolume();
+        callback(val);
+        return val;
+    }
+    
+    function isPaused(callback) {
+        let flag = player.getPlayerState() !== 1;
+        callback(flag);
+        return flag;
+    }
+    
+    function isMuted(callback) {
+        let flag = player.isMuted();
+        callback(flag);
+        return flag;
+    }
+    
+    function getDuration(callback) {
+        let duration = player.getDuration();
+        callback(duration);
+        return duration;
+    }
+    
+    function getCurrentTime(callback) {
+        let time = player.getCurrentTime();
+        callback(time);
+        return time;
     }
 
     return {
         init,
         initPlayer,
-        setProgressDisplay,
+        getCurrentVideoId,
+        
         play,
         pause,
-        prev,
         next,
+        prev,
         setVolume,
-        setProgress,
+        setMute,
+        seekTo,
         getVolume,
-        getCurrentVideoId
+        isPaused,
+        isMuted,
+        getDuration,
+        getCurrentTime
     };
 })();
 
