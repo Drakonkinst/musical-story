@@ -7,10 +7,11 @@ const Input = (function() {
     /* HELPERS */
     function clamp(num, min, max) {
         if(num < min) {
-            num = min;
+            return min;
         } else if(num > max) {
-            num = max;
+            return max;
         }
+        return num;
     }
     
     function resetDragging() {
