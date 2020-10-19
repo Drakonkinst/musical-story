@@ -127,8 +127,12 @@ const SCPlayer = (function() {
         updateCurrentVideo();
     }
     
-    function setVolume(percent) {
-        widget.setVolume(percent);
+    function setVolume(percent, force) {
+        if(!muted || force) {
+            widget.setVolume(percent);
+        } else {
+            lastVolume = percent;
+        }
     }
     
     function setMute(flag) {
@@ -138,10 +142,12 @@ const SCPlayer = (function() {
         
         muted = flag;
         if(flag) {
-            lastVolume = getVolume();
-            setVolume(0);
+            getVolume(function(volume) {
+                lastVolume = volume;
+                setVolume(0, true);
+            });
         } else {
-            setVolume(lastVolume);
+            setVolume(lastVolume, true);
         }
     }
     
