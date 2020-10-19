@@ -54,10 +54,6 @@ const SCPlayer = (function() {
         });*/
     }
     
-    function millisecondsToSeconds(milliseconds) {
-        return Math.round(milliseconds * MILLISECONDS_TO_SECONDS);
-    }
-    
     // not sure if this snippet actually works
     function validateURL(url) {
         let pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
@@ -170,13 +166,13 @@ const SCPlayer = (function() {
     
     function getDuration(callback) {
         return widget.getDuration(function(timeMS) {
-            callback(millisecondsToSeconds(timeMS));
+            callback(timeMS * MILLISECONDS_TO_SECONDS);
         });
     }
     
     function getCurrentTime(callback) {
         return widget.getPosition(function(timeMS) {
-            callback(millisecondsToSeconds(timeMS));
+            callback(timeMS * MILLISECONDS_TO_SECONDS);
         });
     }
     
