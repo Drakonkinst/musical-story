@@ -45,7 +45,7 @@ iframe#scplayer {
 .progress-bar {
     width: 0;
     height: 20px;
-    background-color: blue;
+    background-color: #0075ff;
     /*
     -webkit-transition: all 0.1s ease;
     -moz-transition: all 0.1s ease;
