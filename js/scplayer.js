@@ -6,7 +6,7 @@ const SCPlayer = (function() {
     const SECONDS_TO_MILLISECONDS = 1000;
     
     let widget;
-    let lastVolume = 0;
+    let lastVolume = 52;
     let muted = false;
     
     function init() {
