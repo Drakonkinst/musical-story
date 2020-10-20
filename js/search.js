@@ -120,7 +120,7 @@ const Search = (function() {
             return null;
         }
         
-        $.get("http://soundcloud.com/oembed?format=js&url=" + url + "&iframe=true", function (data) {
+        $.get("https://soundcloud.com/oembed?format=js&url=" + url + "&iframe=true", function (data) {
             let iFrameData = data.substring(1, data.length - 2);
             let songInfo = JSON.parse(iFrameData);
             
