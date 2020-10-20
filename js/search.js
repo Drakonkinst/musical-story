@@ -81,7 +81,7 @@ const Search = (function() {
             return;
         }
         
-        $.getJSON("https://www.googleapis.com/youtube/v3/videos?id=" + id + "&key=AIzaSyAvIC292CCVxPUE59fW3rMmq2zjA1KF8Pk&fields=items(id,snippet(channelId,title,description,thumbnails,channelTitle))&part=snippet", function(json) {
+        $.getJSON("https://www.googleapis.com/youtube/v3/videos?id=" + id + "&key=" + GOOGLE_API_KEY + "&fields=items(id,snippet(channelId,title,description,thumbnails,channelTitle))&part=snippet", function(json) {
             let songInfo = json.items[0];
             //console.log(songInfo);
             let song = {
@@ -143,6 +143,10 @@ const Search = (function() {
         });
     }
     
+    function isGAPILoaded() {
+        return googleAPILoaded;
+    }
+    
     return {
         init,
         loadYTAPI,
@@ -151,6 +155,7 @@ const Search = (function() {
         isValidSoundCloudURL,
         getSongFromYouTubeID,
         getSongFromYouTubeURL,
-        getSongFromSoundCloudURL
+        getSongFromSoundCloudURL,
+        isGAPILoaded
     }
 })();
