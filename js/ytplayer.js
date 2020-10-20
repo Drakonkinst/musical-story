@@ -3,28 +3,8 @@
 const YTVideoPlayer = (function () {
     let player;
     let currentId = "";
-    
-    let songList = [
-        "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        "https://www.youtube.com/watch?v=5D4gzZNOwU4",
-        "https://www.youtube.com/watch?v=HbkR_y_QMnw",
-        "https://www.youtube.com/watch?v=uq84RuBo2kg"
-        //"https://www.youtube.com/watch?v=yCNUP2NAt-A"
-    ];
-    let songIndex = 0;
 
     /* HELPERS */
-    function extractIdFromURL(url) {
-        let index = url.lastIndexOf("v=");
-        let id = url.substring(index + 2);
-        return id;
-    }
-    
-    function updateCurrentVideo() {
-        loadVideoById(extractIdFromURL(songList[songIndex]));
-        //cueVideoById(extractIdFromURL(songList[songIndex]));
-    }
-    
     function getSongDataFromURL(url, callback) {
         console.log("Attempt to request data from YouTube");
         $.get("http://www.youtube.com/oembed?url=" + url + "&format=json", function (data) {
@@ -38,7 +18,7 @@ const YTVideoPlayer = (function () {
             }*/
         });
     }
-    
+
     /* INIT */
     function init() {
         // Loads the IFrame Player API code asynchronously.
@@ -46,26 +26,26 @@ const YTVideoPlayer = (function () {
         tag.src = "https://www.youtube.com/iframe_api";
         let firstScriptTag = document.getElementsByTagName("script")[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        
-        getSongDataFromURL("https://www.youtube.com/watch?v=dQw4w9WgXcQ", function() {
+
+        getSongDataFromURL("https://www.youtube.com/watch?v=dQw4w9WgXcQ", function () {
             console.log("Did it work?");
         });
     }
-    
+
     function initPlayer() {
-        let firstVideoID = extractIdFromURL(songList[songIndex]);
-        setCurrentId(firstVideoID);
+        //let firstVideoID = extractIdFromURL(songList[songIndex]);
+        //setCurrentId(firstVideoID);
         player = new YT.Player("ytplayer", {
-            height: "0",
-            width: "0",
-            videoId: firstVideoID,
+            height: "600",
+            width: "600",
+            videoId: "",
             events: {
                 "onReady": onPlayerReady,
                 "onStateChange": onPlayerStateChange
             }
         });
     }
-    
+
     /* EVENTS */
     function onPlayerReady(event) {
         PM.onPlayerReady("YT");
@@ -79,7 +59,7 @@ const YTVideoPlayer = (function () {
             done = true;
         }*/
     }
-    
+
     /* CONTROLS */
     function setCurrentId(id) {
         currentId = id;
@@ -95,15 +75,7 @@ const YTVideoPlayer = (function () {
         setCurrentId(id);
         player.loadVideoById(id);
     }
-    
-    function getVideoProgress() {
-        let time = player.getCurrentTime();
 
-        // would probably want to calculate duration of the video only once
-        let duration = player.getDuration();
-        return (time / duration * 100).toFixed(2);
-    }
-    
     function getCurrentVideoId() {
         return currentId;
     }
@@ -117,20 +89,22 @@ const YTVideoPlayer = (function () {
         player.pauseVideo();
     }
     
-    function next() {
-        songIndex = (songIndex + 1) % songList.length;
-        updateCurrentVideo();
+    function loadSongByURL(url, callback) {
+        id = Search.isValidYouTubeURL(url);
+        
+        if(!id) {
+            console.log("Invalid URL!");
+            return;
+        }
+        
+        player.loadVideoById(id);
+        callback();
     }
-    
-    function prev() {
-        songIndex = (songIndex - 1 + songList.length) % songList.length;
-        updateCurrentVideo();
-    }
-    
+
     function setVolume(percent) {
         player.setVolume(percent);
     }
-    
+
     function setMute(flag) {
         if(flag) {
             player.mute();
@@ -138,11 +112,15 @@ const YTVideoPlayer = (function () {
             player.unMute();
         }
     }
-    
+
     function seekTo(seconds, allowSeekAhead) {
         player.seekTo(seconds, allowSeekAhead);
     }
     
+    function setPlaybackSpeed(number) {
+        
+    }
+
     function getVolume(callback) {
         if(!player.getVolume) {
             callback(-1);
@@ -152,25 +130,23 @@ const YTVideoPlayer = (function () {
         callback(val);
         return val;
     }
-    
+
     function isPaused(callback) {
-        let flag = player.getPlayerState() !== 1;
+        let flag = player.getPlayerState() !== YT.PlayerState.PLAYING;
         callback(flag);
         return flag;
     }
-    
-    function isMuted(callback) {
-        let flag = player.isMuted();
-        callback(flag);
-        return flag;
+
+    function isMuted() {
+        return player.isMuted();
     }
-    
+
     function getDuration(callback) {
         let duration = player.getDuration();
         callback(duration);
         return duration;
     }
-    
+
     function getCurrentTime(callback) {
         let time = player.getCurrentTime();
         callback(time);
@@ -181,14 +157,14 @@ const YTVideoPlayer = (function () {
         init,
         initPlayer,
         getCurrentVideoId,
-        
+
         play,
         pause,
-        next,
-        prev,
+        loadSongByURL,
         setVolume,
         setMute,
         seekTo,
+        setPlaybackSpeed,
         getVolume,
         isPaused,
         isMuted,

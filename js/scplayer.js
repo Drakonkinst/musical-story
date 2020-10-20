@@ -9,28 +9,10 @@ const SCPlayer = (function() {
     let lastVolume = 0;
     let muted = false;
     
-    let songList = [
-        "https://soundcloud.com/kieutown/story",
-        "https://soundcloud.com/seradotvaw/seraphine-popstars-kda-cover"
-    ];
-    let songIndex = 0;
-    
     function init() {
         widget = SCWidget("scplayer");
         widget.bind(SCWidget.Events.READY, onPlayerReady);
         console.log("Widget loaded!");
-        
-        //"https://soundcloud.com/kieutown/story"
-        getSongDataFromURL("https://soundcloud.com/seradotvaw/seraphine-popstars-kda-cover", function(data) {
-            let lastIndex = data.title.lastIndexOf(" by ");
-            let songTitle = data.title.substring(0, lastIndex);
-            let songAuthor = data.title.substring(lastIndex + 4);
-            console.log("Title: " + songTitle);
-            console.log("Author: " + songAuthor);
-            console.log("Song URL: " + data.url);
-            console.log("Author URL: " + data.author_url);
-            console.log(data);
-        });
         
         /*
         console.log("Attempting to initialize...");
@@ -54,32 +36,6 @@ const SCPlayer = (function() {
         });*/
     }
     
-    // not sure if this snippet actually works
-    function validateURL(url) {
-        let pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
-            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|' + // domain name
-            '((\\d{1,3}\\.){3}\\d{1,3}))' + // ip (v4) address
-            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + //port
-            '(\\?[;&amp;a-z\\d%_.~+=-]*)?' + // query string
-            '(\\#[-a-z\\d_]*)?$', 'i');
-        return pattern.test(url);
-    }
-    
-    function getSongDataFromURL(url, callback) {
-        if(!validateURL(url)) {
-            console.log("Error: Bad URL!");
-            return;
-        }
-        $.get("http://soundcloud.com/oembed?format=js&url=" + url + "&iframe=true", function(data) {
-            let iFrameData = data.substring(1, data.length - 2);
-            let decoded = JSON.parse(iFrameData);
-            decoded.url = url;
-            if(callback) {
-                callback(decoded);
-            }
-        });
-    }
-    
     function onPlayerReady() {
         //widget.play();
         PM.onPlayerReady("SC");
@@ -88,14 +44,8 @@ const SCPlayer = (function() {
         });
     }
     
-    function updateCurrentVideo() {
-        widget.load(songList[songIndex], {
-            callback: play
-        });
-    }
-    
     function checkName() {
-        widget.getCurrentSound(function (music) {
+        widget.getCurrentSound(function(music) {
             console.log("Now Playing: " + music.title);
             console.log("by " + music.user.permalink + " (" + music.user.full_name + ")");
             console.log(music.description);
@@ -113,14 +63,13 @@ const SCPlayer = (function() {
         widget.pause();
     }
     
-    function next() {
-        songIndex = (songIndex + 1) % songList.length;
-        updateCurrentVideo();
-    }
-    
-    function prev() {
-        songIndex = (songIndex - 1 + songList.length) % songList.length;
-        updateCurrentVideo();
+    function loadSongByURL(url, callback) {
+        widget.load(url, {
+            callback: function() {
+                callback();
+                play();
+            }
+        });
     }
     
     function setVolume(percent, force) {
@@ -132,10 +81,6 @@ const SCPlayer = (function() {
     }
     
     function setMute(flag) {
-        if(muted == flag) {
-            return;
-        }
-        
         muted = flag;
         if(flag) {
             getVolume(function(volume) {
@@ -155,8 +100,7 @@ const SCPlayer = (function() {
         return widget.getVolume(callback);
     }
     
-    function isMuted(callback) {
-        callback(muted);
+    function isMuted() {
         return muted;
     }
     
@@ -182,8 +126,7 @@ const SCPlayer = (function() {
         
         play,
         pause,
-        next,
-        prev,
+        loadSongByURL,
         setVolume,
         setMute,
         seekTo,

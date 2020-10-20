@@ -40,7 +40,6 @@
       <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/?locale=en">upgrade your browser</a> to improve your experience and security.</p>
     <![endif]-->
 
-  <!-- Add your site or application content here -->
   <div id="ytplayer"></div>
   <div class="scplayer-container">
     <iframe id="scplayer" width="1" height="1" scrolling="no" frameborder="no" allow="autoplay"
@@ -53,6 +52,10 @@
   <div class="content">
     <div class="display">
       <!--<div class="percent-display"></div>-->
+      <div class="song-info">
+        <div class="song-title-container"></div>
+        <div class="song-author-container"></div>
+      </div>
       <div class="progress"></div>
       <div class="progress-bar-container">
         <div class="progress-bar-background">
@@ -61,23 +64,19 @@
       </div>
     </div>
     <div class="controls">
-      <p>Change Player</p>
-      <button onclick="PM.setPlayer(YTVideoPlayer)">YouTube (4 songs)</button>
-      <button onclick="PM.setPlayer(SCPlayer)">SoundCloud (2 songs)</button>
       <p>Player Controls</p>
       <button onclick="PM.getPlayer().play()">Play</button>
       <button onclick="PM.getPlayer().pause()">Pause</button>
-      <button onclick="PM.getPlayer().prev()">Prev</button>
-      <button onclick="PM.getPlayer().next()">Next</button>
-      <button onclick="PM.getPlayer().setMute(true)">Mute</button>
-      <button onclick="PM.getPlayer().setMute(false)">Unmute</button>
-      <button onclick="SCPlayer.checkName()">Check Name (Debug)</button>
+      <button onclick="PM.prevSong()">Prev</button>
+      <button onclick="PM.nextSong()">Next</button>
+      <button onclick="PM.setMute(true)">Mute</button>
+      <button onclick="PM.setMute(false)">Unmute</button>
     </div>
     
     
   </div>
 
-  <script src="js/lib/modernizr-3.8.0.min.js"></script>
+  <!--<script src="js/lib/modernizr-3.8.0.min.js"></script>-->
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"
     integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
@@ -89,7 +88,9 @@
   <script src="js/input.js"></script>
   <script src="js/ytplayer.js"></script>
   <script src="js/scplayer.js"></script>
+  <script src="js/search.js"></script>
   <script src="js/main.js"></script>
+  <script src="https://apis.google.com/js/client.js?onload=Search.loadYTAPI"></script>
 </body>
 
 </html>

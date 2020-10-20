@@ -3,6 +3,7 @@
 # Useful .gitignore templates: https://github.com/github/gitignore
 
 .editorconfig
+config.json
 server.bat
 devlogs/*
 __pycache__/*

@@ -23,7 +23,7 @@ const Input = (function() {
     function createVolumeSlider() {
         function updateVal() {
             let val = parseInt(slider.val());
-            PM.getPlayer().setVolume(val);
+            PM.setVolume(val);
             level.text(val + "%");
         }
         
