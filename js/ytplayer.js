@@ -7,7 +7,7 @@ const YTVideoPlayer = (function () {
     /* HELPERS */
     function getSongDataFromURL(url, callback) {
         console.log("Attempt to request data from YouTube");
-        $.get("http://www.youtube.com/oembed?url=" + url + "&format=json", function (data) {
+        $.get("https://www.youtube.com/oembed?url=" + url + "&format=json", function (data) {
             console.log(data);
             /*
             let iFrameData = data.substring(1, data.length - 2);
