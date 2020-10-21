@@ -50,9 +50,22 @@
   </div>
 
   <div class="content">
+    <div class="search">
+      <div class="search-bar-container">
+        <p>Search for music:</p>
+        <input placeholder="Enter a YouTube or SoundCloud URL..." class="search-bar">
+        <button onclick="Search.searchForVideo()">Search</button>
+        <p class="query-response"></p>
+      </div>
+      <div class="search-results-container">
+        <div class="search-results"></div>
+        <div class="search-results-controls"></div>
+      </div>
+    </div>
     <div class="display">
       <!--<div class="percent-display"></div>-->
       <div class="song-info">
+        <img class="song-cover-art" src="" alt="" />
         <div class="song-title-container"></div>
         <div class="song-author-container"></div>
       </div>
@@ -64,7 +77,7 @@
       </div>
     </div>
     <div class="controls">
-      <p>Player Controls</p>
+      <p>Player Controls:</p>
       <button onclick="PM.getPlayer().play()">Play</button>
       <button onclick="PM.getPlayer().pause()">Pause</button>
       <button onclick="PM.prevSong()">Prev</button>

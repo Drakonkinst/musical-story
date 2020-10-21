@@ -3,25 +3,33 @@
 const PlayerManager = (function () {
     const PROGRESS_DISPLAY_UPDATE_INTERVAL = 100;
     const NUM_PLAYERS = 2;
-
+    const INITIAL_VOLUME = 50;
+    const IMAGE_URL_REGEX = /\.(jpeg|jpg|png|gif)\b/;
 
     let playersReady = 0;
     let currentPlayer = null;
 
-    let songList = [
+    const defaultSongList = [
         "https://soundcloud.com/kieutown/story",
         "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         "https://soundcloud.com/seradotvaw/seraphine-popstars-kda-cover",
         "https://www.youtube.com/watch?v=5D4gzZNOwU4",
         "https://www.youtube.com/watch?v=HbkR_y_QMnw",
-        "https://www.youtube.com/watch?v=uq84RuBo2kg"
+        "https://www.youtube.com/watch?v=uq84RuBo2kg",
+        "https://soundcloud.com/kieutown/dont-make-me-wait",
+        "https://soundcloud.com/kieutown/no-worries",
+        "https://www.youtube.com/watch?v=o37Za-ifxKw&ab_channel=ChrisTheFlautist",
+        "https://www.youtube.com/watch?v=NSQZqVsaKWY"
     ];
+    
+    let playlists = [];
+    let currentPlaylistIndex = -1;
 
     let songIndex = 0;
     let songInfo = [];
 
     let mute = false;
-    let volume = 52;
+    let volume = INITIAL_VOLUME;
 
     /* INIT */
     function init() {
@@ -34,37 +42,113 @@ const PlayerManager = (function () {
             return;
         }
 
-        createSongInfoRecursive(0);
+        loadAll();
 
         Input.createControls();
         setInterval(updateProgressDisplay, PROGRESS_DISPLAY_UPDATE_INTERVAL);
         updateProgressDisplay(true);
     }
-
-    function onSongsLoad() {
-        playSong(songInfo[0]);
+    
+    function onPlaylistsLoaded() {
+        if(!isValidPlaylistIndex(currentPlaylistIndex)) {
+            setPlaylistIndex(0);
+        }
+        
+        let firstSong = getCurrentPlaylist().songList[0];
+        if(firstSong) {
+            playSong(firstSong);
+        }
+        setVolume(INITIAL_VOLUME);
     }
-
-    function createSongInfoRecursive(index) {
-        if(index >= songList.length) {
-            console.log("All songs loaded!");
-            onSongsLoad();
+    
+    /* SAVING AND LOADING */
+    function saveAll() {
+        localStorage.setItem("playlists", JSON.stringify(playlists));
+        console.log("Saved.");
+    }
+    
+    function loadAll() {
+        if(typeof(Storage) == "undefined") {
+            console.log("Failed to locate localStorage");
             return;
         }
-        let songURL = songList[index];
+        
+        let playlistsStr = localStorage.getItem("playlists");
+        if(playlistsStr) {
+            playlists = JSON.parse(playlistsStr);
+            console.log("Playlists loaded successfully.");
+            
+        } else {
+            console.log("No playlists found in localStorage, creating a default list");
+            playlists = [];
+            createNewPlaylist();
+            createDefaultPlaylistRecursive(0);
+        }
+        
+        let currentIndexStr = localStorage.getItem("currentPlaylistIndex");
+        if(currentIndexStr) {
+            currentPlaylistIndex = parseInt(currentIndexStr);
+        } else {
+            currentPlaylistIndex = 0;
+        }
+        
+        onPlaylistsLoaded();
+    }
+    
+    function onDefaultPlaylistLoad() {
+        console.log("Created default playlist!");
+        saveAll();
+        onPlaylistsLoaded();
+    }
+
+    function createDefaultPlaylistRecursive(index) {
+        if(index >= defaultSongList.length) {
+            onDefaultPlaylistLoad();
+            return;
+        }
+        let songURL = defaultSongList[index];
         if(Search.isValidSoundCloudURL(songURL)) {
             Search.getSongFromSoundCloudURL(songURL, function (song) {
-                songInfo.push(song);
-                createSongInfoRecursive(index + 1);
+                addSongToCurrentPlaylist(song, true);
+                createDefaultPlaylistRecursive(index + 1);
             });
         } else if(Search.isValidYouTubeURL(songURL)) {
             Search.getSongFromYouTubeURL(songURL, function (song) {
-                songInfo.push(song);
-                createSongInfoRecursive(index + 1);
+                addSongToCurrentPlaylist(song, true);
+                createDefaultPlaylistRecursive(index + 1);
             });
         }
     }
+    
+    function setPlaylistIndex(index) {
+        currentPlaylistIndex = index;
+        songIndex = 0;
+        localStorage.setItem("currentPlaylistIndex", index);
+    }
 
+    /* PLAYLIST EDITOR */
+    function createNewPlaylist() {
+        let index = playlists.length;
+        playlists.push({
+            name: "New Playlist",
+            image: "",
+            songList: []
+        });
+        currentPlaylistIndex = index;
+    }
+    
+    function addSongToCurrentPlaylist(song, noSave) {
+        let playlist = getCurrentPlaylist();
+        playlist.songList.push(song);
+        if(!noSave) {
+            saveAll();
+        }
+    }
+    
+    function isValidPlaylistIndex(index) {
+        return playlists.length > 0 && index >= 0 && index < playlists.length;
+    }
+    
     /* PLAYER CONTROLS */
     function setPlayer(player) {
         if(player === currentPlayer) {
@@ -103,13 +187,15 @@ const PlayerManager = (function () {
     }
 
     function nextSong() {
-        songIndex = (songIndex + 1) % songInfo.length;
-        playSong(songInfo[songIndex]);
+        let songList = getCurrentPlaylist().songList;
+        songIndex = (songIndex + 1) % songList.length;
+        playSong(songList[songIndex]);
     }
 
     function prevSong() {
-        songIndex = (songIndex - 1 + songInfo.length) % songInfo.length;
-        playSong(songInfo[songIndex]);
+        let songList = getCurrentPlaylist().songList;
+        songIndex = (songIndex - 1 + songList.length) % songList.length;
+        playSong(songList[songIndex]);
     }
 
     function setMute(flag) {
@@ -135,6 +221,13 @@ const PlayerManager = (function () {
         let songTitle = $(".song-title-container").empty();
         let songAuthor = $(".song-author-container").empty();
 
+        let imageURL = song.image;
+        if(imageURL && imageURL.match(IMAGE_URL_REGEX)) {
+            $(".song-cover-art").attr("src", song.image);
+            $(".song-cover-art").addClass("visible");
+        } else {
+            $(".song-cover-art").removeClass("visible");
+        }
         //let url = song.songURL;
         $("<a>").attr("href", song.songURL)
             .text(song.name)
@@ -215,10 +308,25 @@ const PlayerManager = (function () {
     function getVolume() {
         return volume;
     }
+    
+    function getPlaylists() {
+        return playlists;
+    }
+    
+    function getCurrentPlaylist() {
+        let n = playlists.length;
+        if(n == 0 || currentPlaylistIndex < 0 || currentPlaylistIndex >= n) {
+            return null;
+        }
+
+        return playlists[currentPlaylistIndex];
+    }
 
     return {
         init,
         onPlayerReady,
+        
+        addSongToCurrentPlaylist,
 
         setPlayer,
         playSong,
@@ -231,7 +339,9 @@ const PlayerManager = (function () {
         getPlayer,
         getSongsInfo,
         isMuted,
-        getVolume
+        getVolume,
+        getPlaylists,
+        getCurrentPlaylist
     };
 })();
 const PM = PlayerManager;

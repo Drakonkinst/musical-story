@@ -22,6 +22,58 @@ iframe#scplayer {
     display: none;
 }
 
+/* SEARCH */
+.search {
+    margin-bottom: 25px;
+}
+
+.search-bar {
+    padding: 5px;
+    width: 500px;
+}
+
+.query-response {
+    
+}
+
+.query-response.error {
+    color: red;
+}
+
+.query-response.confirm {
+    color: green;
+}
+
+.search-results-container {
+    margin: 10px 0;
+}
+
+.search-results {
+    white-space: pre-wrap;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    background: #eeeeee;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.search-results:empty {
+    padding: 0;
+    margin-bottom: none;
+}
+
+/* DISPLAY */
+.song-cover-art {
+    /*width: 75px;*/
+    max-height: 75px;
+    display: none;
+    margin: 10px;
+}
+
+.song-cover-art.visible {
+    display: block;
+}
+
 /* CONTROLS */
 .progress-bar-container {
     margin: 20px 0;

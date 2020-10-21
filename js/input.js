@@ -1,8 +1,11 @@
 "use strict";
 
 const Input = (function() {
+    const DRAG_UPDATE_INTERVAL = 100;
+    
     let isDragging = false;
     let dragTask = "";
+    let nextDragUpdate = 0;
     
     /* HELPERS */
     function clamp(num, min, max) {
@@ -56,8 +59,15 @@ const Input = (function() {
             return false;
         });
         
-        function setVideoProgress(progress, allowSeekAhead) {
+        function setVideoProgress(progress, allowSeekAhead, isFromDragging) {
             PM.setProgressDisplay(progress * 100);
+            
+            if(isFromDragging && Date.now() < nextDragUpdate) {
+                // ignore if updated recently
+                return;
+            } else if(isFromDragging) {
+                nextDragUpdate = Date.now() + DRAG_UPDATE_INTERVAL;
+            }
             PM.getPlayer().getDuration(function(duration) {
                 PM.getPlayer().seekTo(progress * duration, allowSeekAhead);
             });
@@ -72,7 +82,7 @@ const Input = (function() {
             let posX = e.pageX - el.position().left;
             let progress = clamp(posX / el.width(), 0.0, 1.0);
 
-            setVideoProgress(progress, false);
+            setVideoProgress(progress, false, true);
         }).mouseup(function(e) {
             if(!isDragging || dragTask !== "progress") {
                 return;
@@ -82,7 +92,7 @@ const Input = (function() {
             let posX = e.pageX - el.position().left;
             let progress = clamp(posX / el.width(), 0.0, 1.0);
 
-            setVideoProgress(progress, true);
+            setVideoProgress(progress, true, false);
             resetDragging();    
         });
         

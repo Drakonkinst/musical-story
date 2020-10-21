@@ -74,6 +74,65 @@ const Search = (function() {
         return client;
     }
     
+    /* SEARCHING */
+    function searchForVideo() {
+        let queryStr = $(".search-bar").val();
+        let isValid = false;
+        
+        if(!queryStr.length) {
+            setQueryResponse("Search box is empty!", true);
+            return;
+        }
+        
+        if(isValidSoundCloudURL(queryStr)) {
+            isValid = true;
+            getSongFromSoundCloudURL(queryStr, function(song) {
+                setSearchResults(song);
+            });
+        } else if(isValidYouTubeURL(queryStr)) {
+            isValid = true;
+            getSongFromYouTubeURL(queryStr, function(song) {
+                setSearchResults(song);
+            });
+        }
+        
+        if(isValid) {
+            setQueryResponse("Query successful! Found 1 item:", false);
+        } else {
+            setQueryResponse("URL is invalid!", true);
+        }
+        
+    }
+    
+    function setQueryResponse(msg, isError, isConfirm) {
+        isError = isError || false;
+        isConfirm = isConfirm || false;
+        let el = $(".query-response")
+            .toggleClass("error", isError)
+            .toggleClass("confirm", isConfirm)
+            .text(msg);
+    }
+    
+    // temp function
+    function setSearchResults(song) {
+        clearSearchResults();
+        let text = JSON.stringify(song, null, 4) + "\n";
+        $(".search-results").text(text);
+        $("<button>")
+            .text("Add to Current Playlist")
+            .click(function() {
+                PM.addSongToCurrentPlaylist(song);
+                clearSearchResults();
+                console.log("Song added!");
+                setQueryResponse("Song added to playlist!", false, true);
+            }).appendTo(".search-results-controls");
+    }
+    
+    function clearSearchResults() {
+        $(".search-results").empty();
+        $(".search-results-controls").empty();
+    }
+    
     /* API */
     function getSongFromYouTubeID(id, callback) {
         if(!id) {
@@ -150,6 +209,8 @@ const Search = (function() {
     return {
         init,
         loadYTAPI,
+        
+        searchForVideo,
         
         isValidYouTubeURL,
         isValidSoundCloudURL,
