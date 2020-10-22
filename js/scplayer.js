@@ -41,8 +41,10 @@ const SCPlayer = (function() {
         //widget.play();
         PM.onPlayerReady("SC");
         widget.bind(SCWidget.Events.PLAY, function () {
+            // Soundcloud sometimes likes to play when it's not its turn
+            // This stops that
             if(PM.getPlayer() !== SCPlayer) {
-                console.log("Caught SC player");
+                //console.log("Caught SC player");
                 pause();
             }
         });
