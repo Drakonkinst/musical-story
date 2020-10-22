@@ -41,7 +41,10 @@ const SCPlayer = (function() {
         //widget.play();
         PM.onPlayerReady("SC");
         widget.bind(SCWidget.Events.PLAY, function () {
-            //console.log("Began playing!");
+            if(PM.getPlayer() !== SCPlayer) {
+                console.log("Caught SC player");
+                pause();
+            }
         });
         
         widget.bind(SCWidget.Events.FINISH, function() {
