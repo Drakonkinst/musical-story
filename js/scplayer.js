@@ -65,7 +65,7 @@ const SCPlayer = (function() {
     
     /* PLAYER METHODS */
     function play() {
-        console.log("SC: Play command called");
+        //console.log("SC: Play command called");
         widget.play();
     }
     
