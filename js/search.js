@@ -167,11 +167,11 @@ const Search = (function() {
             //console.log(songInfo);
             let song = {
                 type: "YT",
-                name: songInfo.snippet.title,
-                author: songInfo.snippet.channelTitle,
+                name: Utils.htmlDecode(songInfo.snippet.title),
+                author: Utils.htmlDecode(songInfo.snippet.channelTitle),
                 songURL: "https://www.youtube.com/watch?v=" + id,
                 authorURL: "https://www.youtube.com/channel/" + songInfo.snippet.channelId,
-                description: songInfo.snippet.description,
+                description: Utils.htmlDecode(songInfo.snippet.description),
                 image: songInfo.snippet.thumbnails.default.url
             };
             //console.log(song);
@@ -210,11 +210,11 @@ const Search = (function() {
             
             let song = {
                 type: "SC",
-                name: songTitle,
-                author: songInfo.author_name,
+                name: Utils.htmlDecode(songTitle),
+                author: Utils.htmlDecode(songInfo.author_name),
                 songURL: url,
                 authorURL: songInfo.author_url,
-                description: songInfo.description,
+                description: Utils.htmlDecode(songInfo.description),
                 image: songInfo.thumbnail_url
             }
             
@@ -261,11 +261,11 @@ const Search = (function() {
         
         let song = {
             type: "YT",
-            name: snippet.title,
-            author: snippet.channelTitle,
+            name: Utils.htmlDecode(snippet.title),
+            author: Utils.htmlDecode(snippet.channelTitle),
             songURL: "https://www.youtube.com/watch?v=" + item.id.videoId,
             authorURL: "https://www.youtube.com/channel/" + snippet.channelId,
-            description: snippet.description,
+            description: Utils.htmlDecode(snippet.description),
             image: snippet.thumbnails.default.url
         };
         

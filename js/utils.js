@@ -15,7 +15,14 @@ const Utils = (function() {
         return str;
     }
     
+    // https://stackoverflow.com/questions/1912501/unescape-html-entities-in-javascript
+    function htmlDecode(input) {
+        var doc = new DOMParser().parseFromString(input, "text/html");
+        return doc.documentElement.textContent;
+    }
+    
     return {
-        secondsToTimeStr
+        secondsToTimeStr,
+        htmlDecode
     };
 })();
