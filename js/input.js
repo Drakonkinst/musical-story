@@ -47,6 +47,12 @@ const Input = (function() {
         });
     }
     
+    // not the most elegant way to do things but ah well
+    function setVolumeSlider(percent) {
+        $(".volume-slider").val(percent);
+        $(".volume-level").text(percent + "%");
+    }
+    
     function createVolumeSlider() {
         function updateVal() {
             let val = parseInt(slider.val());
@@ -59,7 +65,7 @@ const Input = (function() {
         let container = $("<div>").addClass("volume-control").appendTo($(".controls"));
         $("<p>").text("Volume: ").appendTo(container);
         level = $("<div>").addClass("volume-level").appendTo(container);
-        slider = $("<input type='range'>").attr({
+        slider = $("<input type='range'>").addClass("volume-slider").attr({
             "name": "Volume",
             "min": 0,
             "max": 100,
@@ -140,6 +146,7 @@ const Input = (function() {
     return {
         createConfirmDialog,
         createControls,
+        setVolumeSlider,
         isDraggingMouse,
         getDragTask
     };

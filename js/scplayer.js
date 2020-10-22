@@ -4,9 +4,10 @@ const SCPlayer = (function() {
     const SCWidget = SCEmbed.Widget;
     const MILLISECONDS_TO_SECONDS = 1 / 1000;
     const SECONDS_TO_MILLISECONDS = 1000;
+    const MIN_UNMUTE_VOLUME = 5;
     
     let widget;
-    let lastVolume = 52;
+    let lastVolume = 50;
     let muted = false;
     
     function init() {
@@ -79,6 +80,9 @@ const SCPlayer = (function() {
     function setVolume(percent, force) {
         if(!muted || force) {
             widget.setVolume(percent);
+            if(!force) {
+                lastVolume = percent;
+            }
         } else {
             lastVolume = percent;
         }
@@ -92,11 +96,16 @@ const SCPlayer = (function() {
                 setVolume(0, true);
             });
         } else {
+            if(lastVolume === 0) {
+                lastVolume = MIN_UNMUTE_VOLUME;
+                PM.setVolume(lastVolume);
+                Input.setVolumeSlider(lastVolume);
+            }
             setVolume(lastVolume, true);
         }
     }
     
-    function seekTo(seconds, allowSeekAhead) {
+    function seekTo(seconds) {
         widget.seekTo(seconds * SECONDS_TO_MILLISECONDS);
     }
     

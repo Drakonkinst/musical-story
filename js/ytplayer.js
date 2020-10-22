@@ -1,6 +1,8 @@
 "use strict";
 
 const YTVideoPlayer = (function () {
+    const MIN_UNMUTE_VOLUME = 5;
+    
     let player;
     let currentId = "";
 
@@ -94,6 +96,10 @@ const YTVideoPlayer = (function () {
             player.mute();
         } else {
             player.unMute();
+            if(PM.getVolume() === 0) {
+                PM.setVolume(MIN_UNMUTE_VOLUME);
+                Input.setVolumeSlider(MIN_UNMUTE_VOLUME);
+            }
         }
     }
 
@@ -111,7 +117,11 @@ const YTVideoPlayer = (function () {
             return -1;
         }
         let val = player.getVolume();
-        callback(val);
+        
+        if(callback) {
+            callback(val);
+        }
+    
         return val;
     }
 
