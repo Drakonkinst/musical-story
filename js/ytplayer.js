@@ -39,6 +39,9 @@ const YTVideoPlayer = (function () {
             setTimeout(stopVideo, 3000);
             done = true;
         }*/
+        if(event.data === YT.PlayerState.ENDED) {
+            PM.onSongFinish();
+        }
     }
 
     /* CONTROLS */

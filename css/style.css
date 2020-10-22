@@ -49,9 +49,6 @@ iframe#scplayer {
 }
 
 .search-results {
-    white-space: pre-wrap;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 12px;
     background: #eeeeee;
     padding: 5px;
     margin-bottom: 5px;
@@ -60,6 +57,16 @@ iframe#scplayer {
 .search-results:empty {
     padding: 0;
     margin-bottom: none;
+}
+
+.search-result-item {
+    margin-bottom: 10px;
+}
+
+.search-add-to-playlist {
+    margin-left: 20px;
+    cursor: pointer;
+    float: right;
 }
 
 /* DISPLAY */
@@ -114,4 +121,8 @@ iframe#scplayer {
 .volume-level {
     width: 40px;
     float: left;
+}
+
+.controls button {
+    margin-bottom: 5px;
 }

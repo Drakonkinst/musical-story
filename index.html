@@ -29,6 +29,7 @@
   <!-- Place favicon.ico in the root directory -->
 
   <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   <link rel="stylesheet" href="css/style.css">
 
   <meta name="theme-color" content="#fafafa">
@@ -50,6 +51,9 @@
   </div>
 
   <div class="content">
+    <div class="confirm-dialog">
+      <div class="confirm-dialog-text"></div>
+    </div>
     <div class="search">
       <div class="search-bar-container">
         <p>Search for music:</p>
@@ -77,6 +81,11 @@
       </div>
     </div>
     <div class="controls">
+      <p>Playlist Progress: <span class="playlist-progress">0 / 0</span></p>
+      <p>Playlist Controls:</p>
+      <button onclick="PM.attemptRemoveCurrentSong()">Remove Song</button>
+      
+      <!--<p> Annotation Controls</p>-->
       <p>Player Controls:</p>
       <button onclick="PM.getPlayer().play()">Play</button>
       <button onclick="PM.getPlayer().pause()">Pause</button>
@@ -84,6 +93,13 @@
       <button onclick="PM.nextSong()">Next</button>
       <button onclick="PM.setMute(true)">Mute</button>
       <button onclick="PM.setMute(false)">Unmute</button>
+      <br>
+      <button onclick="PM.setAutoPlay(true)">Autoplay On</button>
+      <button onclick="PM.setAutoPlay(false)">Autoplay Off</button>
+      <button onclick="PM.setLoopCurrent(true)">Loop Current On</button>
+      <button onclick="PM.setLoopCurrent(false)">Loop Current Off</button>
+      <button onclick="PM.setLoopPlaylist(true)">Loop Playlist On</button>
+      <button onclick="PM.setLoopPlaylist(false)">Loop Playlist Off</button>
     </div>
     
     

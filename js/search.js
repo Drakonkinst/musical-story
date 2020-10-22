@@ -4,7 +4,8 @@ const Search = (function() {
     const SHORT_YOUTUBE_REG_EXP = /^(?:(https?):\/\/)?(?:(?:www|m)\.)?youtu\.be\/([a-zA-Z0-9_-]+)/
     //const VIMEO_REG_EXP = /^(?:(https?):\/\/)?(?:www\.)?vimeo\.com\/(\d+)/    // maybe one day...
     const SOUNDCLOUD_REGEXP = /^(?:(https?):\/\/)?(?:(?:www|m)\.)?(soundcloud\.com|snd\.sc)\/(.*)$/
-
+    const NUM_YOUTUBE_RESULTS = 10;
+    
     // the default value is a public key that can only be used on drakonkinst.github.io
     // it can be replaced in the config
     let GOOGLE_API_KEY = "AIzaSyDzQGVy_WWoJRV4DRs8SnVGZ2DHSEF8IBI";
@@ -87,21 +88,24 @@ const Search = (function() {
         if(isValidSoundCloudURL(queryStr)) {
             isValid = true;
             getSongFromSoundCloudURL(queryStr, function(song) {
-                setSearchResults(song);
+                clearSearchResults();
+                addSongToSearchResults(song);
             });
         } else if(isValidYouTubeURL(queryStr)) {
             isValid = true;
             getSongFromYouTubeURL(queryStr, function(song) {
-                setSearchResults(song);
+                clearSearchResults();
+                addSongToSearchResults(song);
             });
         }
         
         if(isValid) {
             setQueryResponse("Query successful! Found 1 item:", false);
-        } else {
-            setQueryResponse("URL is invalid!", true);
+            return;
         }
+        //setQueryResponse("URL is invalid!", true);
         
+        queryYouTubeByKeywords(queryStr);
     }
     
     function setQueryResponse(msg, isError, isConfirm) {
@@ -132,6 +136,24 @@ const Search = (function() {
         $(".search-results").empty();
         $(".search-results-controls").empty();
     }
+    
+    function addSongToSearchResults(song) {
+        let songEl = $("<div>").addClass("search-result-item").appendTo(".search-results");
+        $("<a>").attr("href", song.songURL).text(song.name).appendTo(songEl);
+        $("<span>").text(" (").appendTo(songEl);
+        $("<a>").attr("href", song.authorURL).text(song.author).appendTo(songEl);
+        $("<span>").text(")").appendTo(songEl);
+        $("<button>").text("Add to Playlist")
+            .addClass("search-add-to-playlist")
+            .click(function() {
+                PM.addSongToCurrentPlaylist(song);
+                clearSearchResults();
+                //$(this).setDisabled(true);
+                setQueryResponse("Song added to playlist!", false, true);
+            }).appendTo(songEl);
+    }
+    
+    // function addClearResultsButton
     
     /* API */
     function getSongFromYouTubeID(id, callback) {
@@ -202,6 +224,54 @@ const Search = (function() {
         });
     }
     
+    // return array of songs?
+    function queryYouTubeByKeywords(keywords) {
+        gapi.client.youtube.search.list({
+            "part": [
+                "snippet"
+            ],
+            "maxResults": NUM_YOUTUBE_RESULTS,
+            "q": keywords
+        }).then(function(response) {
+            /*console.log("Response", response);*/
+            console.log("Response result", response.result);
+            let items = response.result.items;
+            
+            if(!items.length) {
+                setQueryResponse("No results found! Try different keywords or shorter queries.", true, false);
+                return;
+            }
+            
+            clearSearchResults();
+            setQueryResponse("Query successful! Found " + items.length + " items:");
+            for(let item of items) {
+                let song = getSongFromYouTubeQuery(item);
+                addSongToSearchResults(song);
+            }
+            
+        }, function(err) {
+            console.error("Query error", err);
+        });
+    }
+    
+    function getSongFromYouTubeQuery(item) {
+        let snippet = item.snippet;
+        // will have to do extra work if we want the duration - basically look it up again in the api (this would take 110 units therefore).
+        //let contentDetails = item.contentDetails;
+        
+        let song = {
+            type: "YT",
+            name: snippet.title,
+            author: snippet.channelTitle,
+            songURL: "https://www.youtube.com/watch?v=" + item.id.videoId,
+            authorURL: "https://www.youtube.com/channel/" + snippet.channelId,
+            description: snippet.description,
+            image: snippet.thumbnails.default.url
+        };
+        
+        return song;
+    }
+    
     function isGAPILoaded() {
         return googleAPILoaded;
     }
@@ -211,6 +281,7 @@ const Search = (function() {
         loadYTAPI,
         
         searchForVideo,
+        queryYouTubeByKeywords, // temp public
         
         isValidYouTubeURL,
         isValidSoundCloudURL,

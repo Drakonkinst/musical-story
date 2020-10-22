@@ -23,6 +23,30 @@ const Input = (function() {
     }
     
     /* CREATE UI */
+    function createConfirmDialog(title, message, yesCallback, noCallback) {
+        yesCallback = yesCallback || function () { };
+        noCallback = noCallback || function () { };
+        $(".confirm-dialog-text").text(message);
+        $(".confirm-dialog").dialog({
+            resizable: false,
+            draggable: false,
+            title: title,
+            height: "auto",
+            modal: true,
+            width: 500,
+            buttons: {
+                "Cancel": function() {
+                    $(this).dialog("close");
+                    noCallback();
+                },
+                "Confirm": function() {
+                    $(this).dialog("close");
+                    yesCallback();
+                }
+            }
+        });
+    }
+    
     function createVolumeSlider() {
         function updateVal() {
             let val = parseInt(slider.val());
@@ -32,22 +56,20 @@ const Input = (function() {
         
         let level;
         let slider;
-        PM.getPlayer().getVolume(function(volume) {
-            let container = $("<div>").addClass("volume-control").appendTo($(".controls"));
-            $("<p>").text("Volume: ").appendTo(container);
-            level = $("<div>").addClass("volume-level").appendTo(container);
-            slider = $("<input type='range'>").attr({
-                "name": "Volume",
-                "min": 0,
-                "max": 100,
-                "value": volume,
-                "step": 1
-            }).on("input", function () {
-                updateVal();
-            }).appendTo(container);
-
+        let container = $("<div>").addClass("volume-control").appendTo($(".controls"));
+        $("<p>").text("Volume: ").appendTo(container);
+        level = $("<div>").addClass("volume-level").appendTo(container);
+        slider = $("<input type='range'>").attr({
+            "name": "Volume",
+            "min": 0,
+            "max": 100,
+            "value": 50,
+            "step": 1
+        }).on("input", function () {
             updateVal();
-        });
+        }).appendTo(container);
+
+        updateVal();
     }
     
     function createProgressControls() {
@@ -116,6 +138,7 @@ const Input = (function() {
     }
     
     return {
+        createConfirmDialog,
         createControls,
         isDraggingMouse,
         getDragTask

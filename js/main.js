@@ -19,7 +19,8 @@ const PlayerManager = (function () {
         "https://soundcloud.com/kieutown/dont-make-me-wait",
         "https://soundcloud.com/kieutown/no-worries",
         "https://www.youtube.com/watch?v=o37Za-ifxKw&ab_channel=ChrisTheFlautist",
-        "https://www.youtube.com/watch?v=NSQZqVsaKWY"
+        "https://www.youtube.com/watch?v=NSQZqVsaKWY",
+        "https://www.youtube.com/watch?v=BO3XLE_eRPk"
     ];
     
     let playlists = [];
@@ -30,10 +31,13 @@ const PlayerManager = (function () {
 
     let mute = false;
     let volume = INITIAL_VOLUME;
+    let autoPlay = true;
+    let loopCurrent = false;     // for now, takes precedent over loopPlaylist
+    let loopPlaylist = true;
 
     /* INIT */
     function init() {
-
+        setEmptySongInfoDisplay();
     }
 
     function onPlayerReady(name) {
@@ -59,6 +63,18 @@ const PlayerManager = (function () {
             playSong(firstSong);
         }
         setVolume(INITIAL_VOLUME);
+    }
+    
+    /* EVENTS */
+    function onSongFinish() {
+        if(loopCurrent) {
+            currentPlayer.play();
+            return;
+        }
+        
+        if(autoPlay) {
+            nextSong();
+        }
     }
     
     /* SAVING AND LOADING */
@@ -143,6 +159,10 @@ const PlayerManager = (function () {
         if(!noSave) {
             saveAll();
         }
+        if(playlist.songList.length === 1) {
+            playSong(playlist.songList[0]);
+        }
+        updatePlaylistProgress();
     }
     
     function isValidPlaylistIndex(index) {
@@ -168,6 +188,9 @@ const PlayerManager = (function () {
     function playSong(song) {
         if(!song) {
             console.log("Invalid song!");
+            setProgressDisplay(0, 0);
+            setEmptySongInfoDisplay();
+            return;
         }
 
         if(song.type === "YT") {
@@ -183,17 +206,28 @@ const PlayerManager = (function () {
             currentPlayer.setVolume(volume);
             currentPlayer.setMute(mute);
         });
+        setProgressDisplay(0, 0);
         setSongInfoDisplay(song);
     }
 
     function nextSong() {
         let songList = getCurrentPlaylist().songList;
+        
+        if(songIndex + 1 >= songList.length && !loopPlaylist) {
+            return;
+        }
+        
         songIndex = (songIndex + 1) % songList.length;
         playSong(songList[songIndex]);
     }
 
     function prevSong() {
         let songList = getCurrentPlaylist().songList;
+        
+        if(songIndex - 1 < 0 && !loopPlaylist) {
+            return;
+        }
+        
         songIndex = (songIndex - 1 + songList.length) % songList.length;
         playSong(songList[songIndex]);
     }
@@ -214,6 +248,45 @@ const PlayerManager = (function () {
     function setVolume(percent) {
         currentPlayer.setVolume(percent);
         volume = percent;
+    }
+    
+    function setAutoPlay(flag) {
+        autoPlay = flag;    
+    }
+    
+    function setLoopCurrent(flag) {
+        loopCurrent = flag;     
+    }
+    
+    function setLoopPlaylist(flag) {
+        loopPlaylist = flag;
+    }
+    
+    function attemptRemoveCurrentSong() {
+        Input.createConfirmDialog("Are you sure you want to remove this song?",
+            "It will be deleted from this playlist forever (a very long time!)",
+            removeCurrentSong,
+            function() {},
+        );
+    }
+    
+    function removeCurrentSong() {
+        currentPlayer.pause();
+        let songList = getCurrentPlaylist().songList;
+        songList.splice(songIndex, 1);
+        let n = songList.length;
+        
+        if(n === 0) {
+            // playlist is empty
+            songIndex = 0;
+        } else if(songIndex >= n && songIndex - 1 < n && songIndex - 1 >= 0) {
+            // nothing ahead of song, go to previous
+            songIndex = songIndex - 1;
+        }
+        // otherwise, do nothing - there is a valid song ahead of this song
+        saveAll();
+        playSong(songList[songIndex]);
+        updatePlaylistProgress();
     }
 
     /* GUI */
@@ -254,6 +327,27 @@ const PlayerManager = (function () {
         }
         $("<span>").text(" (" + source + ")")
             .appendTo(songAuthor);
+            
+        updatePlaylistProgress();
+    }
+    
+    function setEmptySongInfoDisplay() {
+        let songTitle = $(".song-title-container").empty();
+        let songAuthor = $(".song-author-container").empty();
+        
+        $(".song-cover-art").removeClass("visible");
+        $("<div>").text("No song currently playing.").appendTo(songTitle);
+        setProgressDisplay(0, 0);
+    }
+    
+    function updatePlaylistProgress() {
+        let index = songIndex + 1;
+        let size = getCurrentPlaylist().songList.length;
+        if(!size) {
+            index = 0;
+            size = 0;
+        }
+        $(".playlist-progress").text(index + " / " + size);
     }
 
     function setProgressDisplay(percent, duration) {
@@ -321,10 +415,16 @@ const PlayerManager = (function () {
 
         return playlists[currentPlaylistIndex];
     }
+    
+    function getCurrentSong() {
+        let song = getCurrentPlaylist().songList[songIndex];
+        return song;
+    }
 
     return {
         init,
         onPlayerReady,
+        onSongFinish,
         
         addSongToCurrentPlaylist,
 
@@ -334,6 +434,10 @@ const PlayerManager = (function () {
         prevSong,
         setMute,
         setVolume,
+        setAutoPlay,
+        setLoopCurrent,
+        setLoopPlaylist,
+        attemptRemoveCurrentSong,
 
         setProgressDisplay,
         getPlayer,
@@ -341,7 +445,8 @@ const PlayerManager = (function () {
         isMuted,
         getVolume,
         getPlaylists,
-        getCurrentPlaylist
+        getCurrentPlaylist,
+        getCurrentSong
     };
 })();
 const PM = PlayerManager;

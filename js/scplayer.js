@@ -42,6 +42,10 @@ const SCPlayer = (function() {
         widget.bind(SCWidget.Events.PLAY, function () {
             //console.log("Began playing!");
         });
+        
+        widget.bind(SCWidget.Events.FINISH, function() {
+            PM.onSongFinish();
+        });
     }
     
     function checkName() {
