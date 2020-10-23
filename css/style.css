@@ -29,7 +29,7 @@ iframe#scplayer {
 
 .search-bar {
     padding: 5px;
-    width: 500px;
+    width: 45%;
 }
 
 .query-response {
@@ -83,28 +83,39 @@ iframe#scplayer {
 
 /* CONTROLS */
 .progress-bar-container {
+    position: relative;
     margin: 20px 0;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none
 }
 
 .progress-bar-background {
     width: 100%;
     background-color: #cccccc;
-    -webkit-transition: all 0.3s ease;
-    -moz-transition: all 0.3s ease;
-    -ms-transition: all 0.3s ease;
-    -o-transition: all 0.3s ease;
-    transition: all 0.3s ease;
+    -webkit-transition: background-color 0.3s ease;
+    -moz-transition: background-color 0.3s ease;
+    -ms-transition: background-color 0.3s ease;
+    -o-transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease;
+    height: 20px;
 }
 
 .progress-bar-background:hover {
-    background-color: #eeeeee;
+    /*background-color: #eeeeee;*/
     cursor: pointer;
 }
 
 .progress-bar {
+    position: absolute;
     width: 0;
-    height: 20px;
+    height: 10px;
+    margin-top: 5px;
+    z-index: 2;
+    /*opacity: 0.5;*/
     background-color: #0075ff;
+    
     /*
     -webkit-transition: all 0.1s ease;
     -moz-transition: all 0.1s ease;
@@ -112,6 +123,55 @@ iframe#scplayer {
     -o-transition: all 0.1s ease;
     transition: all 0.1s ease;
     */
+    -webkit-transition: background-color 0.3s ease;
+    -moz-transition: background-color 0.3s ease;
+    -ms-transition: background-color 0.3s ease;
+    -o-transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease;
+}
+
+.progress-bar:hover {
+    background-color: #3b75ba;
+}
+
+.annotations-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    /*outline: 1px solid black;*/
+}
+
+.annotation-bar-item {
+    width: 0;
+    height: 100%;
+    background: #f7ef79;
+    float: right;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.annotation-bar-item:hover {
+    background: #ffd800;
+}
+
+.annotation-bar-separator {
+    width: 0;
+    height: 100%;
+    float: right;
+}
+
+.annotation-bar-item:not(:first-child) {
+    box-shadow: 1px 0px 0px 0px white;
+}
+
+.annotation-bar-separator:not(:first-child) {
+    box-shadow: 1px 0px 0px 0px white;
 }
 
 .volume-control {

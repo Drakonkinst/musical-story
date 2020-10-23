@@ -73,10 +73,10 @@ const SCPlayer = (function() {
         widget.pause();
     }
     
-    function loadSongByURL(url, callback) {
+    function loadSongByURL(url) {
         widget.load(url, {
             callback: function() {
-                callback();
+                PM.onSongReady();
                 play();
             }
         });

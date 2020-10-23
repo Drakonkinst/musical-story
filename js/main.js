@@ -1,10 +1,18 @@
 "use strict";
 
 const PlayerManager = (function () {
-    const PROGRESS_DISPLAY_UPDATE_INTERVAL = 100;
+    const UPDATE_INTERVAL = 100;
     const NUM_PLAYERS = 2;
     const INITIAL_VOLUME = 50;
     const IMAGE_URL_REGEX = /\.(jpeg|jpg|png|gif)\b/;
+    const MAX_SONG_DESCRIPTION_LENGTH = 300;
+    const MAX_SONG_TITLE_LENGTH = 100;
+    const MAX_SONG_AUTHOR_LENGTH = 100;
+    
+    const LOOP_NONE = 0;
+    const LOOP_PLAYLIST = 1;
+    const LOOP_CURRENT = 2;
+    const LOOP_ANNOTATION = 3;  // if no annotation found, waits till annotation is reached - otherwise, acts like LOOP_NONE
 
     let playersReady = 0;
     let currentPlayer = null;
@@ -49,7 +57,7 @@ const PlayerManager = (function () {
         loadAll();
 
         Input.createControls();
-        setInterval(updateProgressDisplay, PROGRESS_DISPLAY_UPDATE_INTERVAL);
+        setInterval(onSongUpdate, UPDATE_INTERVAL);
         updateProgressDisplay(true);
     }
     
@@ -77,9 +85,26 @@ const PlayerManager = (function () {
         }
     }
     
+    function onSongUpdate() {
+        currentPlayer.getCurrentTime(function(time) {
+            let song = getCurrentSong();
+            if(song == null) {
+                return;
+            }
+            Annotation.viewAnnotationAtTime(getCurrentSong().annotations, time);
+        });
+        updateProgressDisplay();
+    }
+    
+    function onSongReady() {
+        currentPlayer.setVolume(volume);
+        currentPlayer.setMute(mute);
+        Annotation.onSongChange();
+    }
+    
     /* SAVING AND LOADING */
     function saveAll() {
-        localStorage.setItem("playlists", JSON.stringify(playlists));
+        localStorage.setItem("playlists", Utils.compressData(JSON.stringify(playlists)));
         console.log("Saved.");
     }
     
@@ -89,11 +114,18 @@ const PlayerManager = (function () {
             return;
         }
         
-        let playlistsStr = localStorage.getItem("playlists");
+        
+        let compressed = localStorage.getItem("playlists");
+        let playlistsStr = Utils.decompressData(compressed);
+        if(compressed && compressed.charAt(0) == '[') {
+            // for people on old builds with uncompressed data
+            localStorage.setItem("playlists", Utils.compressData(compressed));
+            playlistsStr = compressed;
+        }
+        
         if(playlistsStr) {
             playlists = JSON.parse(playlistsStr);
             console.log("Playlists loaded successfully.");
-            
         } else {
             console.log("No playlists found in localStorage, creating a default list");
             playlists = [];
@@ -114,6 +146,7 @@ const PlayerManager = (function () {
     function onDefaultPlaylistLoad() {
         console.log("Created default playlist!");
         saveAll();
+        updatePlaylistProgress();
         onPlaylistsLoaded();
     }
 
@@ -124,12 +157,12 @@ const PlayerManager = (function () {
         }
         let songURL = defaultSongList[index];
         if(Search.isValidSoundCloudURL(songURL)) {
-            Search.getSongFromSoundCloudURL(songURL, function (song) {
+            Search.fetchSongFromSoundCloudURL(songURL, function (song) {
                 addSongToCurrentPlaylist(song, true);
                 createDefaultPlaylistRecursive(index + 1);
             });
-        } else if(Search.isValidYouTubeURL(songURL)) {
-            Search.getSongFromYouTubeURL(songURL, function (song) {
+        } else if(Search.isValidYouTubeVideoURL(songURL)) {
+            Search.fetchSongFromYouTubeURL(songURL, function (song) {
                 addSongToCurrentPlaylist(song, true);
                 createDefaultPlaylistRecursive(index + 1);
             });
@@ -153,20 +186,79 @@ const PlayerManager = (function () {
         currentPlaylistIndex = index;
     }
     
+    function validateSongInfo(song) {
+        song.description = Utils.clampString(song.description, MAX_SONG_DESCRIPTION_LENGTH);
+        song.author = Utils.clampString(song.author, MAX_SONG_AUTHOR_LENGTH);
+        song.name = Utils.clampString(song.name, MAX_SONG_TITLE_LENGTH);    
+    }
+    
     function addSongToCurrentPlaylist(song, noSave) {
+        if(!song) {
+            return;
+        }
+        
+        validateSongInfo(song);
         let playlist = getCurrentPlaylist();
         playlist.songList.push(song);
-        if(!noSave) {
-            saveAll();
-        }
+
         if(playlist.songList.length === 1) {
             playSong(playlist.songList[0]);
         }
-        updatePlaylistProgress();
+
+        if(!noSave) {
+            saveAll();
+            updatePlaylistProgress();
+        }
     }
     
     function isValidPlaylistIndex(index) {
         return playlists.length > 0 && index >= 0 && index < playlists.length;
+    }
+    
+    /* SEARCH FUNCTION */
+    function searchForVideo() {
+        let queryStr = $(".search-bar").val();
+        Search.searchForVideo(queryStr);
+    }
+    
+    function setQueryResponse(msg, isError, isConfirm) {
+        isError = isError || false;
+        isConfirm = isConfirm || false;
+        let el = $(".query-response")
+            .toggleClass("error", isError)
+            .toggleClass("confirm", isConfirm)
+            .text(msg);
+    }
+
+    function clearSearchResults() {
+        $(".search-results").empty();
+    }
+
+    function addSongToSearchResults(song, durationStr) {
+        let songEl = $("<div>").addClass("search-result-item").appendTo(".search-results");
+        durationStr = durationStr || "";
+        if(durationStr.length) {
+            durationStr = "[" + durationStr + "]";
+        }
+
+        $("<a>").attr("href", song.songURL)
+            .attr("target", "_blank")
+            .text(song.name)
+            .appendTo(songEl);
+        $("<span>").text(" (").appendTo(songEl);
+        $("<a>").attr("href", song.authorURL)
+            .attr("target", "_blank")
+            .text(song.author)
+            .appendTo(songEl);
+        $("<span>").text(") " + durationStr).appendTo(songEl);
+        $("<button>").text("Add to Playlist")
+            .addClass("search-add-to-playlist")
+            .on("click", function () {
+                PM.addSongToCurrentPlaylist(song);
+                clearSearchResults();
+                //$(this).setDisabled(true);
+                setQueryResponse("Song added to playlist!", false, true);
+            }).appendTo(songEl);
     }
     
     /* PLAYER CONTROLS */
@@ -202,10 +294,10 @@ const PlayerManager = (function () {
             return;
         }
 
-        currentPlayer.loadSongByURL(song.songURL, function () {
-            currentPlayer.setVolume(volume);
-            currentPlayer.setMute(mute);
-        });
+        currentPlayer.loadSongByURL(song.songURL);
+        
+        // clear stuff until it loads
+        Annotation.clearAnnotationBar();
         setProgressDisplay(0, 0);
         setSongInfoDisplay(song);
     }
@@ -288,6 +380,65 @@ const PlayerManager = (function () {
         playSong(songList[songIndex]);
         updatePlaylistProgress();
     }
+    
+    function addAnnotation() {
+        let song = getCurrentSong();
+        if(!song.hasOwnProperty("annotations")) {
+            song.annotations = [];
+        }
+        currentPlayer.getCurrentTime(function(time) {
+            Annotation.addBlankAnnotationAtTime(song.annotations, time);
+            saveAll();
+        });
+    }
+    
+    function removeAnnotation() {
+        let song = getCurrentSong();
+        if(!song.hasOwnProperty("annotations")) {
+            return;
+        }
+        
+        currentPlayer.getCurrentTime(function(time) {
+            Annotation.removeAnnotationAtTime(song.annotations, time);
+            saveAll();
+        });
+    }
+    
+    function setAnnotationEnd() {
+        getCurrentAnnotation(function(annotation, time) {
+            if(annotation != null) {
+                annotation.end = time;
+                Annotation.updateAnnotationDisplay();
+                saveAll();
+            }
+        });
+    }
+    
+    function getCurrentAnnotation(callback) {
+        let song = getCurrentSong();
+        currentPlayer.getCurrentTime(function(time) {
+            if(!song.annotations) {
+                callback(null);
+                return;
+            }
+            let annotation = Annotation.getAnnotationAtTime(song.annotations, time);
+            if(annotation != null) {
+                callback(annotation, time);
+            } else {
+                callback(null);
+            }
+        });
+    }
+    
+    function resetAnnotationEnd() {
+        getCurrentAnnotation(function(annotation) {
+            if(annotation != null) {
+                delete annotation.end;
+                Annotation.updateAnnotationDisplay();
+                saveAll();
+            }
+        });
+    }
 
     /* GUI */
     function setSongInfoDisplay(song) {
@@ -305,7 +456,7 @@ const PlayerManager = (function () {
         $("<a>").attr("href", song.songURL)
             .text(song.name)
             .attr("target", "_blank")
-            .click(function () {
+            .on("click", function () {
                 // when clicked, pauses song to prevent overlap
                 currentPlayer.pause();
             })
@@ -356,7 +507,7 @@ const PlayerManager = (function () {
         }
 
         if(duration == null) {
-            currentPlayer.getDuration(function (duration) {
+            currentPlayer.getDuration(function(duration) {
                 setProgressDisplay(percent, duration);
             });
             return;
@@ -425,8 +576,15 @@ const PlayerManager = (function () {
         init,
         onPlayerReady,
         onSongFinish,
+        onSongReady,
+        saveAll,
         
         addSongToCurrentPlaylist,
+        
+        searchForVideo,
+        setQueryResponse,
+        clearSearchResults,
+        addSongToSearchResults,
 
         setPlayer,
         playSong,
@@ -438,6 +596,11 @@ const PlayerManager = (function () {
         setLoopCurrent,
         setLoopPlaylist,
         attemptRemoveCurrentSong,
+        addAnnotation,
+        removeAnnotation,
+        setAnnotationEnd,
+        getCurrentAnnotation,
+        resetAnnotationEnd,
 
         setProgressDisplay,
         getPlayer,
@@ -457,6 +620,7 @@ $(function () {
     PM.init();
     PM.setPlayer(YTVideoPlayer);
     Search.init();
+    Annotation.init();
 
     console.log("Document loaded!");
 });

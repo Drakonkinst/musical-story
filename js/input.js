@@ -2,6 +2,7 @@
 
 const Input = (function() {
     const DRAG_UPDATE_INTERVAL = 100;
+    const LEFT_CLICK = 1;
     
     let isDragging = false;
     let dragTask = "";
@@ -79,9 +80,9 @@ const Input = (function() {
     }
     
     function createProgressControls() {
-        $(".progress-bar-background").click(function(e) {
+        $(".progress-bar-background").on("click", function(e) {
             
-        }).mousedown(function(e) {
+        }).on("mousedown", function(e) {
             isDragging = true;
             dragTask = "progress";
             return false;
@@ -101,30 +102,30 @@ const Input = (function() {
             });
         }
         
-        $(window).mousemove(function(e) {
+        $(window).on("mousemove", function(e) {
             if(!isDragging || dragTask !== "progress") {
                 return;
             }
             
             let el = $(".progress-bar-background");
-            let posX = e.pageX - el.position().left;
+            let posX = e.pageX - el.offset().left;
             let progress = clamp(posX / el.width(), 0.0, 1.0);
 
             setVideoProgress(progress, false, true);
-        }).mouseup(function(e) {
+        }).on("mouseup", function(e) {
             if(!isDragging || dragTask !== "progress") {
                 return;
             }
             
             let el = $(".progress-bar-background");
-            let posX = e.pageX - el.position().left;
+            let posX = e.pageX - el.offset().left;
             let progress = clamp(posX / el.width(), 0.0, 1.0);
 
             setVideoProgress(progress, true, false);
             resetDragging();    
         });
         
-        $(window).blur(function() {
+        $(window).on("blur", function() {
             resetDragging();
         });
     }

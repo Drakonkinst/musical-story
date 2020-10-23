@@ -4,7 +4,7 @@ const YTVideoPlayer = (function () {
     const MIN_UNMUTE_VOLUME = 5;
     
     let player;
-    let currentId = "";
+    let lastState = -9;
 
     /* INIT */
     function init() {
@@ -44,27 +44,17 @@ const YTVideoPlayer = (function () {
         if(event.data === YT.PlayerState.ENDED) {
             PM.onSongFinish();
         }
+        
+        if(event.data === YT.PlayerState.PLAYING) {
+            if(lastState === YT.PlayerState.BUFFERING) {
+                PM.onSongReady();
+            }
+        }
+        
+        lastState = event.data;
     }
 
     /* CONTROLS */
-    function setCurrentId(id) {
-        currentId = id;
-        console.log("Now playing: " + id);
-    }
-
-    function cueVideoById(id) {
-        setCurrentId(id);
-        player.cueVideoById(id);
-    }
-
-    function loadVideoById(id) {
-        setCurrentId(id);
-        player.loadVideoById(id);
-    }
-
-    function getCurrentVideoId() {
-        return currentId;
-    }
 
     /* PLAYER METHODS */
     function play() {
@@ -75,8 +65,8 @@ const YTVideoPlayer = (function () {
         player.pauseVideo();
     }
     
-    function loadSongByURL(url, callback) {
-        let id = Search.isValidYouTubeURL(url);
+    function loadSongByURL(url) {
+        let id = Search.isValidYouTubeVideoURL(url);
         
         if(!id) {
             console.log("Invalid URL!");
@@ -84,7 +74,6 @@ const YTVideoPlayer = (function () {
         }
         
         player.loadVideoById(id);
-        callback();
     }
 
     function setVolume(percent) {
@@ -150,7 +139,6 @@ const YTVideoPlayer = (function () {
     return {
         init,
         initPlayer,
-        getCurrentVideoId,
 
         play,
         pause,

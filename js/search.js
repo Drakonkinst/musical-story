@@ -1,35 +1,47 @@
+"use strict"
+
 // thing that queries API
-const Search = (function() {
-    const FULL_YOUTUBE_REG_EXP = /^(?:(https?):\/\/)?(?:(?:www|m)\.)?youtube\.com\/watch.*v=([a-zA-Z0-9_-]+)/
-    const SHORT_YOUTUBE_REG_EXP = /^(?:(https?):\/\/)?(?:(?:www|m)\.)?youtu\.be\/([a-zA-Z0-9_-]+)/
-    //const VIMEO_REG_EXP = /^(?:(https?):\/\/)?(?:www\.)?vimeo\.com\/(\d+)/    // maybe one day...
-    const SOUNDCLOUD_REGEXP = /^(?:(https?):\/\/)?(?:(?:www|m)\.)?(soundcloud\.com|snd\.sc)\/(.*)$/
+const Search = (function () {
+    const YOUTUBE_PLAYLIST_PATTERN = /(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:playlist|list|embed)(?:\.php)?(?:\?.*list=|\/))([a-zA-Z0-9\-_]+)/;
+    const FULL_YOUTUBE_VIDEO_PATTERN = /^(?:(https?):\/\/)?(?:(?:www|m)\.)?youtube\.com\/watch.*v=([a-zA-Z0-9_-]+)/;
+    const SHORT_YOUTUBE_VIDEO_PATTERN = /^(?:(https?):\/\/)?(?:(?:www|m)\.)?youtu\.be\/([a-zA-Z0-9_-]+)/;
+    //const VIMEO_PATTERN = /^(?:(https?):\/\/)?(?:www\.)?vimeo\.com\/(\d+)/    // maybe one day
+    const SOUNDCLOUD_REGEXP = /^(?:(https?):\/\/)?(?:(?:www|m)\.)?(soundcloud\.com|snd\.sc)\/(.*)$/;
     const NUM_YOUTUBE_RESULTS = 10;
-    
+
+    const SPOTIFY_PLAYLIST_PATTERN = /https?:\/\/.*\.spotify\.com\/(users?\/.*\/)?playlists?\/([^?\/\s]*)/;
+    const SPOTIFY_TRACK_PATTERN = /https?:\/\/.*\.spotify\.com\/tracks?\/([^?\/\s]*)/;
+    const SPOTIFY_ALBUM_PATTERN = /https?:\/\/.*\.spotify\.com\/albums?\/([^?\/\s]*)/;
+    const SPOTIFY_TOPTEN_ARTIST_PATTERN = /https?:\/\/.*\.spotify\.com\/artists?\/([^?\/\s]*)/;
+
+    const YOUTUBE_BASE_URL = "https://www.googleapis.com/youtube/v3/videos";
+    const SOUNDCLOUD_BASE_URL = "https://soundcloud.com/oembed";
+    const SPOTIFY_BASE_URL = "https://api.spotify.com";
+
     // the default value is a public key that can only be used on drakonkinst.github.io
     // it can be replaced in the config
     let GOOGLE_API_KEY = "AIzaSyDzQGVy_WWoJRV4DRs8SnVGZ2DHSEF8IBI";
     let googleAPILoaded = false;
-    
+
     /* HELPERS */
     // returns YouTube ID if any
-    function isValidYouTubeURL(url) {
-        let longURLMatch = url.match(FULL_YOUTUBE_REG_EXP);
-        let shortURLMatch = url.match(SHORT_YOUTUBE_REG_EXP);
-        
+    function isValidYouTubeVideoURL(url) {
+        let longURLMatch = url.match(FULL_YOUTUBE_VIDEO_PATTERN);
+        let shortURLMatch = url.match(SHORT_YOUTUBE_VIDEO_PATTERN);
+
         if(longURLMatch && longURLMatch[2]) {
             // [0] is also a valid URL
             return longURLMatch[2];
         }
-        
+
         if(shortURLMatch && shortURLMatch[2]) {
             // [0] is NOT a valid URL
             return shortURLMatch[2];
         }
-        
+
         return null;
     }
-    
+
     // returns url if any
     function isValidSoundCloudURL(url) {
         let match = url.match(SOUNDCLOUD_REGEXP);
@@ -38,7 +50,7 @@ const Search = (function() {
         }
         return null;
     }
-    
+
     /* INIT */
     function init() {
         $.getJSON("/config.json", function (json) {
@@ -49,17 +61,10 @@ const Search = (function() {
         }).fail(function () {
             console.log("API key not found, using default settings.");
         });
-        
+
         setTimeout(loadYTAPI, 500);
-        
-        /*
-        getSongFromSoundCloudURL("https://soundcloud.com/seradotvaw/seraphine-popstars-kda-cover", function(data) {console.log(data)});
-        getSongFromSoundCloudURL("https://soundcloud.com/kieutown/story", function (data) { console.log(data) });
-        getSongFromYouTubeURL("https://youtu.be/FdeioVndUhs", function (data) { console.log(data) });
-        getSongFromYouTubeURL("https://www.youtube.com/watch?v=dQw4w9WgXcQ", function (data) { console.log(data) });
-        */
     }
-    
+
     function loadYTAPI() {
         if(googleAPILoaded) {
             console.log(song);
@@ -74,140 +79,105 @@ const Search = (function() {
                 function (err) { console.error("Error loading GAPI client for API", err); });
         return client;
     }
-    
+
     /* SEARCHING */
-    function searchForVideo() {
-        let queryStr = $(".search-bar").val();
-        let isValid = false;
-        
+    function searchForVideo(queryStr) {
+        PM.clearSearchResults();
+
         if(!queryStr.length) {
-            setQueryResponse("Search box is empty!", true);
+            PM.setQueryResponse("Search box is empty!", true);
             return;
         }
-        
+
         if(isValidSoundCloudURL(queryStr)) {
-            isValid = true;
-            getSongFromSoundCloudURL(queryStr, function(song) {
-                clearSearchResults();
-                addSongToSearchResults(song);
+            fetchSongFromSoundCloudURL(queryStr, function (song) {
+                PM.addSongToSearchResults(song);
+                PM.setQueryResponse("Query successful! Found 1 item:");
             });
-        } else if(isValidYouTubeURL(queryStr)) {
-            isValid = true;
-            getSongFromYouTubeURL(queryStr, function(song) {
-                clearSearchResults();
-                addSongToSearchResults(song);
+        } else if(queryStr.match(YOUTUBE_PLAYLIST_PATTERN)) {
+            console.log("Youtube Playlist");
+            // separate PM.addPlaylistToSearchResults() -> Import Playlist?
+            // How to view song lists?
+            // How to see if videos on the playlist are invalid?
+        } else if(isValidYouTubeVideoURL(queryStr)) {
+            fetchSongFromYouTubeURL(queryStr, function(song) {
+                PM.addSongToSearchResults(song);
+                PM.setQueryResponse("Query successful! Found 1 item:");
             });
+        } else if(queryStr.match(SPOTIFY_PLAYLIST_PATTERN)) {
+            console.log("Spotify Playlist")
+        } else if(queryStr.match(SPOTIFY_TRACK_PATTERN)) {
+            console.log("Spotify Track");
+        } else if(queryStr.match(SPOTIFY_ALBUM_PATTERN)) {
+            console.log("Spotify Album");
+        } else if(queryStr.match(SPOTIFY_TOPTEN_ARTIST_PATTERN)) {
+            console.log("Top Ten Album");
+        } else {
+            queryYouTubeByKeywords(queryStr);
         }
-        
-        if(isValid) {
-            setQueryResponse("Query successful! Found 1 item:", false);
-            return;
-        }
-        //setQueryResponse("URL is invalid!", true);
-        
-        queryYouTubeByKeywords(queryStr);
     }
-    
-    function setQueryResponse(msg, isError, isConfirm) {
-        isError = isError || false;
-        isConfirm = isConfirm || false;
-        let el = $(".query-response")
-            .toggleClass("error", isError)
-            .toggleClass("confirm", isConfirm)
-            .text(msg);
-    }
-    
-    // temp function
-    function setSearchResults(song) {
-        clearSearchResults();
-        let text = JSON.stringify(song, null, 4) + "\n";
-        $(".search-results").text(text);
-        $("<button>")
-            .text("Add to Current Playlist")
-            .click(function() {
-                PM.addSongToCurrentPlaylist(song);
-                clearSearchResults();
-                console.log("Song added!");
-                setQueryResponse("Song added to playlist!", false, true);
-            }).appendTo(".search-results-controls");
-    }
-    
-    function clearSearchResults() {
-        $(".search-results").empty();
-        $(".search-results-controls").empty();
-    }
-    
-    function addSongToSearchResults(song) {
-        let songEl = $("<div>").addClass("search-result-item").appendTo(".search-results");
-        $("<a>").attr("href", song.songURL).text(song.name).appendTo(songEl);
-        $("<span>").text(" (").appendTo(songEl);
-        $("<a>").attr("href", song.authorURL).text(song.author).appendTo(songEl);
-        $("<span>").text(")").appendTo(songEl);
-        $("<button>").text("Add to Playlist")
-            .addClass("search-add-to-playlist")
-            .click(function() {
-                PM.addSongToCurrentPlaylist(song);
-                clearSearchResults();
-                //$(this).setDisabled(true);
-                setQueryResponse("Song added to playlist!", false, true);
-            }).appendTo(songEl);
-    }
-    
-    // function addClearResultsButton
-    
+
     /* API */
-    function getSongFromYouTubeID(id, callback) {
+    function fetchSongFromYouTubeID(id, callback) {
         if(!id) {
             console.log("Invalid YouTube ID!");
             return;
         }
-        
-        $.getJSON("https://www.googleapis.com/youtube/v3/videos?id=" + id + "&key=" + GOOGLE_API_KEY + "&fields=items(id,snippet(channelId,title,description,thumbnails,channelTitle))&part=snippet", function(json) {
+
+        $.getJSON(YOUTUBE_BASE_URL + "?id=" + id + "&key=" + GOOGLE_API_KEY + "&fields=items(id,snippet(channelId,title,description,thumbnails,channelTitle))&part=snippet", function (json) {
             let songInfo = json.items[0];
-            //console.log(songInfo);
-            let song = {
-                type: "YT",
-                name: Utils.htmlDecode(songInfo.snippet.title),
-                author: Utils.htmlDecode(songInfo.snippet.channelTitle),
-                songURL: "https://www.youtube.com/watch?v=" + id,
-                authorURL: "https://www.youtube.com/channel/" + songInfo.snippet.channelId,
-                description: Utils.htmlDecode(songInfo.snippet.description),
-                image: songInfo.snippet.thumbnails.default.url
-            };
-            //console.log(song);
-            
+            let song = fetchSongFromYouTubeQuery(songInfo, id);
+
             if(callback) {
                 callback(song);
             }
+        }).fail(function () {
+            console.error("Query error fetching song from YouTube ID");
         });
     }
-    
-    function getSongFromYouTubeURL(url, callback) {
-        id = isValidYouTubeURL(url);
-        
+
+    function fetchSongFromYouTubeQuery(item, id) {
+        let snippet = item.snippet;
+
+        let song = {
+            type: "YT",
+            name: Utils.htmlDecode(snippet.title),
+            author: Utils.htmlDecode(snippet.channelTitle),
+            songURL: "https://www.youtube.com/watch?v=" + id,
+            authorURL: "https://www.youtube.com/channel/" + snippet.channelId,
+            description: Utils.htmlDecode(snippet.description),
+            image: snippet.thumbnails.default.url
+        };
+
+        return song;
+    }
+
+    function fetchSongFromYouTubeURL(url, callback) {
+        let id = isValidYouTubeVideoURL(url);
+
         if(!id) {
             console.log("Invalid YouTube URL!");
             return null;
         }
-        
-        return getSongFromYouTubeID(id, callback);
+
+        return fetchSongFromYouTubeID(id, callback);
     }
-    
-    function getSongFromSoundCloudURL(url, callback) {
+
+    function fetchSongFromSoundCloudURL(url, callback) {
         url = isValidSoundCloudURL(url);
-        
+
         if(!url) {
             console.log("Invalid SoundCloud URL!");
             return null;
         }
-        
-        $.get("https://soundcloud.com/oembed?format=js&url=" + url + "&iframe=true", function (data) {
+
+        $.get(SOUNDCLOUD_BASE_URL + "?format=js&url=" + url + "&iframe=true", function (data) {
             let iFrameData = data.substring(1, data.length - 2);
             let songInfo = JSON.parse(iFrameData);
-            
+
             let lastIndex = songInfo.title.lastIndexOf(" by ");
             let songTitle = songInfo.title.substring(0, lastIndex);
-            
+
             let song = {
                 type: "SC",
                 name: Utils.htmlDecode(songTitle),
@@ -217,77 +187,98 @@ const Search = (function() {
                 description: Utils.htmlDecode(songInfo.description),
                 image: songInfo.thumbnail_url
             }
-            
+
             if(callback) {
                 callback(song);
             }
+        }).fail(function () {
+            console.error("Query error fetching song from SoundCloud URL");
         });
     }
-    
-    // return array of songs?
+
     function queryYouTubeByKeywords(keywords) {
         gapi.client.youtube.search.list({
             "part": [
                 "snippet"
             ],
+            "fields": "items(id, snippet(channelId, title, description, thumbnails, channelTitle))",
             "maxResults": NUM_YOUTUBE_RESULTS,
             "q": keywords
-        }).then(function(response) {
-            /*console.log("Response", response);*/
-            console.log("Response result", response.result);
+        }).then(function (response) {
+            //console.log("Response result", response.result);
             let items = response.result.items;
-            
+
             if(!items.length) {
-                setQueryResponse("No results found! Try different keywords or shorter queries.", true, false);
+                PM.setQueryResponse("No results found! Try different keywords or shorter queries.", true, false);
                 return;
             }
-            
-            clearSearchResults();
-            setQueryResponse("Query successful! Found " + items.length + " items:");
-            for(let item of items) {
-                let song = getSongFromYouTubeQuery(item);
-                addSongToSearchResults(song);
+
+            let numFound = 0;
+            for(let i = 0; i < items.length; i++) {
+                let item = items[i];
+                let song = fetchSongFromYouTubeQuery(item, item.id.videoId);
+                fetchYouTubeVideoDurationById(item.id.videoId, function (durationStr) {
+                    numFound++;
+                    PM.addSongToSearchResults(song, durationStr);
+                    if(i >= items.length - 1) {
+                        // last one
+                        PM.setQueryResponse("Query successful!");
+                    }
+                });
             }
-            
-        }, function(err) {
+
+        }, function (err) {
             console.error("Query error", err);
         });
     }
-    
-    function getSongFromYouTubeQuery(item) {
-        let snippet = item.snippet;
-        // will have to do extra work if we want the duration - basically look it up again in the api (this would take 110 units therefore).
-        //let contentDetails = item.contentDetails;
-        
-        let song = {
-            type: "YT",
-            name: Utils.htmlDecode(snippet.title),
-            author: Utils.htmlDecode(snippet.channelTitle),
-            songURL: "https://www.youtube.com/watch?v=" + item.id.videoId,
-            authorURL: "https://www.youtube.com/channel/" + snippet.channelId,
-            description: Utils.htmlDecode(snippet.description),
-            image: snippet.thumbnails.default.url
-        };
-        
-        return song;
+
+    function fetchYouTubeVideoDurationById(id, callback) {
+        $.getJSON(YOUTUBE_BASE_URL + "?id=" + id + "&key=" + GOOGLE_API_KEY + "&fields=items(contentDetails(duration))&part=contentDetails", function (json) {
+            if(!json.items.length) {
+                // Invalid item
+                return;
+            }
+            let durationStr = Utils.convertISO8601ToHMSStr(json.items[0].contentDetails.duration);
+            if(callback) {
+                callback(durationStr);
+            }
+        }).fail(function () {
+            console.error("Query error fetching duration of video");
+        });
     }
-    
+
+    function fetchSongFromSpotifyTrack(url) {
+
+    }
+
+    function fetchSongsFromSpotifyPlaylist(url) {
+
+    }
+
+    function fetchSongsFromSpotifyAlbumPlaylist(url) {
+
+    }
+
+    function fetchSongsFromSpotifyTopTenPlaylist(url) {
+
+    }
+
     function isGAPILoaded() {
         return googleAPILoaded;
     }
-    
+
     return {
         init,
         loadYTAPI,
-        
+
         searchForVideo,
         queryYouTubeByKeywords, // temp public
-        
-        isValidYouTubeURL,
+
+        isValidYouTubeVideoURL,
         isValidSoundCloudURL,
-        getSongFromYouTubeID,
-        getSongFromYouTubeURL,
-        getSongFromSoundCloudURL,
+        fetchSongFromYouTubeID,
+        fetchSongFromYouTubeURL,
+        fetchSongFromSoundCloudURL,
         isGAPILoaded
     }
 })();
