@@ -8,10 +8,11 @@ const PlayerManager = (function () {
     const MAX_SONG_DESCRIPTION_LENGTH = 300;
     const MAX_SONG_TITLE_LENGTH = 100;
     const MAX_SONG_AUTHOR_LENGTH = 100;
-    
+    const MILLISECONDS_TO_SECONDS = 1 / 1000;
+
     const LOOP_NONE = 0;
-    const LOOP_PLAYLIST = 1;
-    const LOOP_CURRENT = 2;
+    const LOOP_CURRENT = 1;
+    const LOOP_PLAYLIST = 2;
     const LOOP_ANNOTATION = 3;  // if no annotation found, waits till annotation is reached - otherwise, acts like LOOP_NONE
 
     let playersReady = 0;
@@ -30,7 +31,7 @@ const PlayerManager = (function () {
         "https://www.youtube.com/watch?v=NSQZqVsaKWY",
         "https://www.youtube.com/watch?v=BO3XLE_eRPk"
     ];
-    
+
     let playlists = [];
     let currentPlaylistIndex = -1;
 
@@ -39,9 +40,10 @@ const PlayerManager = (function () {
 
     let mute = false;
     let volume = INITIAL_VOLUME;
+    let currentTime = 0;
+    let duration = 0;
     let autoPlay = true;
-    let loopCurrent = false;     // for now, takes precedent over loopPlaylist
-    let loopPlaylist = true;
+    let loopState = LOOP_NONE;
 
     /* INIT */
     function init() {
@@ -60,61 +62,73 @@ const PlayerManager = (function () {
         setInterval(onSongUpdate, UPDATE_INTERVAL);
         updateProgressDisplay(true);
     }
-    
+
     function onPlaylistsLoaded() {
         if(!isValidPlaylistIndex(currentPlaylistIndex)) {
             setPlaylistIndex(0);
         }
-        
+
         let firstSong = getCurrentPlaylist().songList[0];
         if(firstSong) {
             playSong(firstSong);
         }
         setVolume(INITIAL_VOLUME);
     }
-    
+
     /* EVENTS */
     function onSongFinish() {
-        if(loopCurrent) {
+        if(loopState === LOOP_CURRENT) {
             currentPlayer.play();
             return;
         }
-        
+
         if(autoPlay) {
             nextSong();
         }
     }
-    
+
     function onSongUpdate() {
         currentPlayer.getCurrentTime(function(time) {
             let song = getCurrentSong();
             if(song == null) {
                 return;
             }
-            Annotation.viewAnnotationAtTime(getCurrentSong().annotations, time);
+            let currentAnnotation = Annotation.getAnnotationAtTime(song.annotations, time);
+            if(currentAnnotation != null && loopState === LOOP_ANNOTATION) {
+                let nextTime = time + UPDATE_INTERVAL * MILLISECONDS_TO_SECONDS;
+                if(Annotation.getAnnotationAtTime(song.annotations, nextTime) != currentAnnotation) {
+                    currentPlayer.seekTo(currentAnnotation.start);
+                    return;
+                }
+            }
+            currentTime = time;
+            Annotation.viewAnnotationAtTime(song.annotations, time);
         });
         updateProgressDisplay();
     }
-    
+
     function onSongReady() {
         currentPlayer.setVolume(volume);
         currentPlayer.setMute(mute);
-        Annotation.onSongChange();
+        currentPlayer.getDuration(function (val) {
+            duration = val;
+            Annotation.onSongChange();
+        });
     }
-    
+
     /* SAVING AND LOADING */
     function saveAll() {
         localStorage.setItem("playlists", Utils.compressData(JSON.stringify(playlists)));
         console.log("Saved.");
     }
-    
+
     function loadAll() {
-        if(typeof(Storage) == "undefined") {
+        if(typeof (Storage) == "undefined") {
             console.log("Failed to locate localStorage");
             return;
         }
-        
-        
+
+
         let compressed = localStorage.getItem("playlists");
         let playlistsStr = Utils.decompressData(compressed);
         if(compressed && compressed.charAt(0) == '[') {
@@ -122,7 +136,7 @@ const PlayerManager = (function () {
             localStorage.setItem("playlists", Utils.compressData(compressed));
             playlistsStr = compressed;
         }
-        
+
         if(playlistsStr) {
             playlists = JSON.parse(playlistsStr);
             console.log("Playlists loaded successfully.");
@@ -132,17 +146,17 @@ const PlayerManager = (function () {
             createNewPlaylist();
             createDefaultPlaylistRecursive(0);
         }
-        
+
         let currentIndexStr = localStorage.getItem("currentPlaylistIndex");
         if(currentIndexStr) {
             currentPlaylistIndex = parseInt(currentIndexStr);
         } else {
             currentPlaylistIndex = 0;
         }
-        
+
         onPlaylistsLoaded();
     }
-    
+
     function onDefaultPlaylistLoad() {
         console.log("Created default playlist!");
         saveAll();
@@ -168,7 +182,7 @@ const PlayerManager = (function () {
             });
         }
     }
-    
+
     function setPlaylistIndex(index) {
         currentPlaylistIndex = index;
         songIndex = 0;
@@ -185,18 +199,18 @@ const PlayerManager = (function () {
         });
         currentPlaylistIndex = index;
     }
-    
+
     function validateSongInfo(song) {
         song.description = Utils.clampString(song.description, MAX_SONG_DESCRIPTION_LENGTH);
         song.author = Utils.clampString(song.author, MAX_SONG_AUTHOR_LENGTH);
-        song.name = Utils.clampString(song.name, MAX_SONG_TITLE_LENGTH);    
+        song.name = Utils.clampString(song.name, MAX_SONG_TITLE_LENGTH);
     }
-    
+
     function addSongToCurrentPlaylist(song, noSave) {
         if(!song) {
             return;
         }
-        
+
         validateSongInfo(song);
         let playlist = getCurrentPlaylist();
         playlist.songList.push(song);
@@ -210,17 +224,17 @@ const PlayerManager = (function () {
             updatePlaylistProgress();
         }
     }
-    
+
     function isValidPlaylistIndex(index) {
         return playlists.length > 0 && index >= 0 && index < playlists.length;
     }
-    
+
     /* SEARCH FUNCTION */
     function searchForVideo() {
         let queryStr = $(".search-bar").val();
         Search.searchForVideo(queryStr);
     }
-    
+
     function setQueryResponse(msg, isError, isConfirm) {
         isError = isError || false;
         isConfirm = isConfirm || false;
@@ -260,7 +274,7 @@ const PlayerManager = (function () {
                 setQueryResponse("Song added to playlist!", false, true);
             }).appendTo(songEl);
     }
-    
+
     /* PLAYER CONTROLS */
     function setPlayer(player) {
         if(player === currentPlayer) {
@@ -295,31 +309,33 @@ const PlayerManager = (function () {
         }
 
         currentPlayer.loadSongByURL(song.songURL);
-        
+
         // clear stuff until it loads
         Annotation.clearAnnotationBar();
+        currentTime = 0;
+        duration = 0;
         setProgressDisplay(0, 0);
         setSongInfoDisplay(song);
     }
 
     function nextSong() {
         let songList = getCurrentPlaylist().songList;
-        
-        if(songIndex + 1 >= songList.length && !loopPlaylist) {
+
+        if(songIndex + 1 >= songList.length && !(loopState !== LOOP_PLAYLIST)) {
             return;
         }
-        
+
         songIndex = (songIndex + 1) % songList.length;
         playSong(songList[songIndex]);
     }
 
     function prevSong() {
         let songList = getCurrentPlaylist().songList;
-        
-        if(songIndex - 1 < 0 && !loopPlaylist) {
+
+        if(songIndex - 1 < 0 && !(loopState !== LOOP_PLAYLIST)) {
             return;
         }
-        
+
         songIndex = (songIndex - 1 + songList.length) % songList.length;
         playSong(songList[songIndex]);
     }
@@ -341,33 +357,29 @@ const PlayerManager = (function () {
         currentPlayer.setVolume(percent);
         volume = percent;
     }
-    
+
     function setAutoPlay(flag) {
-        autoPlay = flag;    
+        autoPlay = flag;
     }
     
-    function setLoopCurrent(flag) {
-        loopCurrent = flag;     
+    function setLoopState(val) {
+        loopState = val;
     }
-    
-    function setLoopPlaylist(flag) {
-        loopPlaylist = flag;
-    }
-    
+
     function attemptRemoveCurrentSong() {
         Input.createConfirmDialog("Are you sure you want to remove this song?",
             "It will be deleted from this playlist forever (a very long time!)",
             removeCurrentSong,
-            function() {},
+            function () { },
         );
     }
-    
+
     function removeCurrentSong() {
         currentPlayer.pause();
         let songList = getCurrentPlaylist().songList;
         songList.splice(songIndex, 1);
         let n = songList.length;
-        
+
         if(n === 0) {
             // playlist is empty
             songIndex = 0;
@@ -380,32 +392,29 @@ const PlayerManager = (function () {
         playSong(songList[songIndex]);
         updatePlaylistProgress();
     }
-    
+
     function addAnnotation() {
         let song = getCurrentSong();
         if(!song.hasOwnProperty("annotations")) {
             song.annotations = [];
         }
-        currentPlayer.getCurrentTime(function(time) {
-            Annotation.addBlankAnnotationAtTime(song.annotations, time);
-            saveAll();
-        });
+
+        Annotation.addBlankAnnotationAtTime(song.annotations, currentTime);
+        saveAll();
     }
-    
+
     function removeAnnotation() {
         let song = getCurrentSong();
         if(!song.hasOwnProperty("annotations")) {
             return;
         }
-        
-        currentPlayer.getCurrentTime(function(time) {
-            Annotation.removeAnnotationAtTime(song.annotations, time);
-            saveAll();
-        });
+
+        Annotation.removeAnnotationAtTime(song.annotations, currentTime);
+        saveAll();
     }
-    
+
     function setAnnotationEnd() {
-        getCurrentAnnotation(function(annotation, time) {
+        getCurrentAnnotation(function (annotation, time) {
             if(annotation != null) {
                 annotation.end = time;
                 Annotation.updateAnnotationDisplay();
@@ -413,25 +422,23 @@ const PlayerManager = (function () {
             }
         });
     }
-    
+
     function getCurrentAnnotation(callback) {
         let song = getCurrentSong();
-        currentPlayer.getCurrentTime(function(time) {
-            if(!song.annotations) {
-                callback(null);
-                return;
-            }
-            let annotation = Annotation.getAnnotationAtTime(song.annotations, time);
-            if(annotation != null) {
-                callback(annotation, time);
-            } else {
-                callback(null);
-            }
-        });
+        if(!song.annotations) {
+            callback(null);
+            return;
+        }
+        let annotation = Annotation.getAnnotationAtTime(song.annotations, currentTime);
+        if(annotation != null) {
+            callback(annotation, currentTime);
+        } else {
+            callback(null);
+        }
     }
-    
+
     function resetAnnotationEnd() {
-        getCurrentAnnotation(function(annotation) {
+        getCurrentAnnotation(function (annotation) {
             if(annotation != null) {
                 delete annotation.end;
                 Annotation.updateAnnotationDisplay();
@@ -478,19 +485,19 @@ const PlayerManager = (function () {
         }
         $("<span>").text(" (" + source + ")")
             .appendTo(songAuthor);
-            
+
         updatePlaylistProgress();
     }
-    
+
     function setEmptySongInfoDisplay() {
         let songTitle = $(".song-title-container").empty();
         let songAuthor = $(".song-author-container").empty();
-        
+
         $(".song-cover-art").removeClass("visible");
         $("<div>").text("No song currently playing.").appendTo(songTitle);
         setProgressDisplay(0, 0);
     }
-    
+
     function updatePlaylistProgress() {
         let index = songIndex + 1;
         let size = getCurrentPlaylist().songList.length;
@@ -507,10 +514,7 @@ const PlayerManager = (function () {
         }
 
         if(duration == null) {
-            currentPlayer.getDuration(function(duration) {
-                setProgressDisplay(percent, duration);
-            });
-            return;
+            duration = PM.getDuration();
         }
 
         let seconds = percent * duration / 100;
@@ -529,11 +533,8 @@ const PlayerManager = (function () {
             if(isPaused && !force) {
                 return;
             }
-            currentPlayer.getCurrentTime(function (time) {
-                currentPlayer.getDuration(function (duration) {
-                    setProgressDisplay((time / duration * 100).toFixed(2), duration);
-                });
-            });
+
+            setProgressDisplay((currentTime / duration * 100).toFixed(2));
         });
     }
 
@@ -549,15 +550,15 @@ const PlayerManager = (function () {
     function isMuted() {
         return mute;
     }
-    
+
     function getVolume() {
         return volume;
     }
-    
+
     function getPlaylists() {
         return playlists;
     }
-    
+
     function getCurrentPlaylist() {
         let n = playlists.length;
         if(n == 0 || currentPlaylistIndex < 0 || currentPlaylistIndex >= n) {
@@ -566,10 +567,22 @@ const PlayerManager = (function () {
 
         return playlists[currentPlaylistIndex];
     }
-    
+
     function getCurrentSong() {
         let song = getCurrentPlaylist().songList[songIndex];
         return song;
+    }
+
+    function getCurrentTime() {
+        return currentTime;
+    }
+
+    function getDuration() {
+        return duration;
+    }
+    
+    function getLoopState() {
+        return loopState;
     }
 
     return {
@@ -578,9 +591,9 @@ const PlayerManager = (function () {
         onSongFinish,
         onSongReady,
         saveAll,
-        
+
         addSongToCurrentPlaylist,
-        
+
         searchForVideo,
         setQueryResponse,
         clearSearchResults,
@@ -593,8 +606,7 @@ const PlayerManager = (function () {
         setMute,
         setVolume,
         setAutoPlay,
-        setLoopCurrent,
-        setLoopPlaylist,
+        setLoopState,
         attemptRemoveCurrentSong,
         addAnnotation,
         removeAnnotation,
@@ -609,7 +621,10 @@ const PlayerManager = (function () {
         getVolume,
         getPlaylists,
         getCurrentPlaylist,
-        getCurrentSong
+        getCurrentSong,
+        getCurrentTime,
+        getDuration,
+        getLoopState
     };
 })();
 const PM = PlayerManager;

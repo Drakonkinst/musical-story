@@ -99,42 +99,71 @@ const Annotation = (function () {
 
     }
 
+    /* EVENTS */
     function onAutosave() {
         if(easyMDE.isPreviewActive()) {
             return;
         }
         saveCurrentAnnotation();
     }
-    
+
     function onSongChange() {
         updateAnnotationDisplay();
         lastAnnotationIndex = -1;
     }
 
     /* FUNCTIONS */
-    function viewAnnotationAtTime(annotationList, time) {
-        // should also call onTimeUpdate() to switch annotations if needed?
+    function addBlankAnnotationAtTime(annotationList, time) {
+        // this is the laziest insert in existence
+        // ah well
+        annotationList.push({
+            start: time,
+            text: ""
+        });
+        quickSort(annotationList, 0, annotationList.length - 1);
+        updateAnnotationDisplay();
+
+        // TODO: set lastAnnotationIndex to proper value
+    }
+    
+    function removeAnnotationAtTime(annotationList, time) {
         let index = getAnnotationIndexAtTime(annotationList, time);
 
-        if(index === lastAnnotationIndex) {
-            return;
-        }
-        
-        // this could cause some bugs
-        setEditMode(false);
-
         if(index < 0) {
-            //console.log("Clearing content");
-            lastAnnotationIndex = -1;
-            easyMDE.value("");
             return;
         }
 
-        //console.log("Setting new content");
-        easyMDE.value(annotationList[index].text);
-        lastAnnotationIndex = index;
+        annotationList.splice(index, 1);
+        updateAnnotationDisplay();
     }
 
+    function setEditMode(flag) {
+        if(easyMDE.isPreviewActive() && flag) {
+            // edit mode on
+            if(lastAnnotationIndex < 0) {
+                return;
+            }
+            easyMDE.togglePreview();
+
+            // temp - should switch to Loop Annotation (forced) instead
+            PM.getPlayer().pause();
+        } else if(!easyMDE.isPreviewActive() && !flag) {
+            // edit mode off
+            easyMDE.togglePreview();
+            saveCurrentAnnotation();
+        }
+    }
+
+    function saveCurrentAnnotation() {
+        PM.getCurrentAnnotation(function(annotation) {
+            if(annotation) {
+                annotation.text = easyMDE.value();
+                PM.saveAll();
+            }
+        });
+    }
+
+    /* ACCESSOR */
     // can be null
     function getAnnotationAtTime(annotationList, time) {
         let index = getAnnotationIndexAtTime(annotationList, time);
@@ -143,7 +172,7 @@ const Annotation = (function () {
         }
         return null;
     }
-    
+
     function getAnnotationIndexAtTime(annotationList, time) {
         if(!annotationList) {
             return -1;
@@ -161,56 +190,6 @@ const Annotation = (function () {
         return index;
     }
 
-    function removeAnnotationAtTime(annotationList, time) {
-        let index = getAnnotationIndexAtTime(annotationList, time);
-
-        if(index < 0) {
-            return;
-        }
-
-        annotationList.splice(index, 1);
-        updateAnnotationDisplay();
-    }
-
-    function addBlankAnnotationAtTime(annotationList, time) {
-        // this is the laziest insert in existence
-        // ah well
-        annotationList.push({
-            start: time,
-            text: ""
-        });
-        quickSort(annotationList, 0, annotationList.length - 1);
-        updateAnnotationDisplay();
-
-        // TODO: set lastAnnotationIndex to proper value
-    }
-    
-    function setEditMode(flag) {
-        if(easyMDE.isPreviewActive() && flag) {
-            // edit mode on
-            if(lastAnnotationIndex < 0) {
-                return;
-            }
-            easyMDE.togglePreview();
-            
-            // temp - should switch to Loop Annotation (forced) instead
-            PM.getPlayer().pause();
-        } else if(!easyMDE.isPreviewActive() && !flag) {
-            // edit mode off
-            easyMDE.togglePreview();
-            saveCurrentAnnotation();
-        }
-    }
-    
-    function saveCurrentAnnotation() {
-        PM.getCurrentAnnotation(function (annotation) {
-            if(annotation) {
-                annotation.text = easyMDE.value();
-                PM.saveAll();
-            }
-        });    
-    }
-    
     function isEditMode() {
         return !easyMDE.isPreviewActive();
     }
@@ -218,55 +197,85 @@ const Annotation = (function () {
     /* RENDERING */
     // may want to find a better system where we just draw boxes
     function updateAnnotationDisplay() {
-        console.log("Updating annotation");
+        //console.log("Updating annotation");
 
-        PM.getPlayer().getDuration(function(duration) {
-            let annotations = PM.getCurrentSong().annotations;
-            let annotationBar = $(".annotations-bar").empty();
-            if(!annotations || !annotations.length) {
-                return;
-            }
-            let lastTimestamp = duration;
-            for(let i = annotations.length - 1; i >= 0; i--) {
-                let annotation = annotations[i];
-                let start = annotation.start;
-                let end = annotation.end;
-                if(isValidEndTime(start, end)) {
-                    if(end < lastTimestamp) {
-                        let blankTime = lastTimestamp - end;
-                        addSegment("annotation-bar-separator", (blankTime / duration) * 100, annotationBar);
-                        lastTimestamp = end;
-                    }
-                }
-                let time = lastTimestamp - annotation.start;
-                lastTimestamp = start;
-                addSegment("annotation-bar-item", (time / duration) * 100, annotationBar);
-            }
-        });
+        let annotations = PM.getCurrentSong().annotations;
+        let annotationBar = $(".annotations-bar").empty();
+        let duration = PM.getDuration();
+        if(!annotations || !annotations.length) {
+            return;
+        }
+        let lastTimestamp = duration;
+
+        for(let i = annotations.length - 1; i >= 0; i--) {
+            let annotation = annotations[i];
+            let start = annotation.start;
+            let end = annotation.end;
+            lastTimestamp = addGapSegmentIfNeeded(start, end, lastTimestamp, duration, annotationBar);
+            lastTimestamp = addAnnotationSegment(start, lastTimestamp, duration, annotationBar);
+        }
     }
-    
-    function clearAnnotationBar() {
-        $(".annotations-bar").empty();
+
+    function addGapSegmentIfNeeded(start, end, lastTimestamp, duration, annotationBar) {
+        if(isValidEndTime(start, end) && end < lastTimestamp) {
+            let blankTime = lastTimestamp - end;
+            addSegment("annotation-bar-separator", (blankTime / duration) * 100, annotationBar);
+            return end;
+        }
+        return lastTimestamp;
     }
-    
+
+    function addAnnotationSegment(start, lastTimestamp, duration, annotationBar) {
+        let time = lastTimestamp - start;
+        addSegment("annotation-bar-item", (time / duration) * 100, annotationBar);
+        return start;
+    }
+
     function addSegment(class_, percentWidth, parent) {
-        //console.log("Adding segment", class_);
         $("<div>").addClass(class_)
             .width(percentWidth + "%")
             .appendTo(parent);
     }
 
+    function clearAnnotationBar() {
+        $(".annotations-bar").empty();
+    }
+    
+    function viewAnnotationAtTime(annotationList, time) {
+        // should also call onTimeUpdate() to switch annotations if needed?
+        let index = getAnnotationIndexAtTime(annotationList, time);
+
+        if(index === lastAnnotationIndex) {
+            return;
+        }
+
+        // this could cause some bugs
+        setEditMode(false);
+
+        if(index < 0) {
+            //console.log("Clearing content");
+            lastAnnotationIndex = -1;
+            easyMDE.value("");
+            return;
+        }
+
+        //console.log("Setting new content");
+        easyMDE.value(annotationList[index].text);
+        lastAnnotationIndex = index;
+    }
+
     return {
         init,
-        viewAnnotationAtTime,
         onSongChange,
-        getAnnotationAtTime,
         addBlankAnnotationAtTime,
         removeAnnotationAtTime,
+        setEditMode,
+        
+        isEditMode,
+        getAnnotationAtTime,
+        
         updateAnnotationDisplay,
         clearAnnotationBar,
-        
-        setEditMode,
-        isEditMode
+        viewAnnotationAtTime,
     };
 })();

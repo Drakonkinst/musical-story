@@ -27,11 +27,11 @@
   <meta name="twitter:creator" content="@USERNAME">
 
   <!--<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />-->
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link rel="stylesheet" href="/css/jquery-ui.css">
   <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/highlight.js/latest/styles/github.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/style.css">
 
   <meta name="theme-color" content="#fafafa">
   <meta name="introduction" content="no-reference">
@@ -46,9 +46,6 @@
   <div class="scplayer-container">
     <iframe id="scplayer" width="1" height="1" scrolling="no" frameborder="no" allow="autoplay"
       src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/501938133"></iframe>
-      
-      <!-- kieutown: 501938133-->
-      <!-- KDA: 880233430-->
   </div>
 
   <div class="content">
@@ -110,10 +107,10 @@
       <br>
       <button onclick="PM.setAutoPlay(true)">Autoplay On</button>
       <button onclick="PM.setAutoPlay(false)">Autoplay Off</button>
-      <button onclick="PM.setLoopCurrent(true)">Loop Current On</button>
-      <button onclick="PM.setLoopCurrent(false)">Loop Current Off</button>
-      <button onclick="PM.setLoopPlaylist(true)">Loop Playlist On</button>
-      <button onclick="PM.setLoopPlaylist(false)">Loop Playlist Off</button>
+      <button onclick="PM.setLoopState(0)">Loop None</button>
+      <button onclick="PM.setLoopState(1)">Loop Current</button>
+      <button onclick="PM.setLoopState(2)">Loop Playlist</button>
+      <button onclick="PM.setLoopState(3)">Loop Annotation</button>
     </div>
     
     
@@ -130,6 +127,7 @@
   <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
   <script src="https://cdn.jsdelivr.net/highlight.js/latest/highlight.min.js"></script>
   <!--<script src="https://connect.soundcloud.com/sdk/sdk-3.3.2.js"></script>-->
+  
   <script src="js/utils.js"></script>
   <script src="js/input.js"></script>
   <script src="js/ytplayer.js"></script>
