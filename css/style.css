@@ -81,6 +81,32 @@ iframe#scplayer {
     display: block;
 }
 
+/* ANNOTATION EDITOR */
+img[src*="thumbnail"] {
+   width: 75px;
+}
+
+img[src*="small"] {
+   width: 150px;
+}
+
+img[src*="medium"] {
+   width: 200px;
+}
+
+img[src*="large"] {
+   width: 500px;
+}
+
+img[src*="bordered"] {
+   border: 1px solid black;
+}
+
+img[src*="wrap"] {
+    float: left;
+    margin-right: 10px;
+}
+
 /* CONTROLS */
 .progress-bar-container {
     position: relative;

@@ -88,7 +88,15 @@ const Input = (function() {
             return false;
         });
         
+        const THRESHOLD = 0.00001;
+        let lastProgress = -1;
         function setVideoProgress(progress, allowSeekAhead, isFromDragging) {
+            if(Math.abs(progress - lastProgress) < THRESHOLD) {
+                lastProgress = progress;
+                return;
+            }
+            lastProgress = progress;
+            
             PM.setProgressDisplay(progress * 100);
             
             if(isFromDragging && Date.now() < nextDragUpdate) {
@@ -97,9 +105,7 @@ const Input = (function() {
             } else if(isFromDragging) {
                 nextDragUpdate = Date.now() + DRAG_UPDATE_INTERVAL;
             }
-            PM.getPlayer().getDuration(function(duration) {
-                PM.getPlayer().seekTo(progress * duration, allowSeekAhead);
-            });
+            PM.getPlayer().seekTo(progress * PM.getDuration(), allowSeekAhead);
         }
         
         $(window).on("mousemove", function(e) {
@@ -111,7 +117,7 @@ const Input = (function() {
             let posX = e.pageX - el.offset().left;
             let progress = clamp(posX / el.width(), 0.0, 1.0);
 
-            setVideoProgress(progress, false, true);
+            setVideoProgress(progress, false, true);                
         }).on("mouseup", function(e) {
             if(!isDragging || dragTask !== "progress") {
                 return;
@@ -122,7 +128,7 @@ const Input = (function() {
             let progress = clamp(posX / el.width(), 0.0, 1.0);
 
             setVideoProgress(progress, true, false);
-            resetDragging();    
+            resetDragging(); 
         });
         
         $(window).on("blur", function() {

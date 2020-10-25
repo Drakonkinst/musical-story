@@ -64,6 +64,8 @@ const Annotation = (function () {
 
     /* INIT */
     function init() {
+        const IMAGE_HELP = "<!\n'+'--\nImage format: ![placeholder name](url)\n You can also add certain tags at the end of the url (e.g. url#medium,bordered) to format it.\n- thumbnail: Sets width to 75px.\n- small: Sets width to 150px.\n- medium: Sets width to 200px.\n- large: Sets width to 500px.\n- bordered: Adds a 1px border around the image.\n- wrap: Makes text wrap around the image.\n--'+'>\n";
+        const LINK_HELP = "\n<!-- Link format: [display text](url) -->\n";
         easyMDE = new EasyMDE({
             element: $(".annotation-editor-textarea")[0],
             placeholder: "Type here...",
@@ -83,6 +85,13 @@ const Annotation = (function () {
                 "guide"],
             tabSize: 4,
             forceSync: true,
+            insertTexts: {
+                horizontalRule: ["\n---\n", ""],
+                image: ["![](", ")" + IMAGE_HELP],
+                link: ["[](", ")" + LINK_HELP],
+                table: ["", "\n| Column 1 | Column 2 | Column 3 |\n| --- | --- | --- |\n| Text | Text | Text | "]
+            },
+            maxHeight: "500px",
             renderingConfig: {
                 codeSyntaxHighlighting: true
             }
