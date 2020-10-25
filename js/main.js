@@ -77,6 +77,9 @@ const PlayerManager = (function () {
 
     /* EVENTS */
     function onSongFinish() {
+        if(Input.getDragTask() === "progress") {
+            return;
+        }
         if(loopState === LOOP_CURRENT) {
             currentPlayer.play();
             return;
@@ -96,7 +99,7 @@ const PlayerManager = (function () {
             let currentAnnotation = Annotation.getAnnotationAtTime(song.annotations, time);
             if(currentAnnotation != null && loopState === LOOP_ANNOTATION) {
                 let nextTime = time + UPDATE_INTERVAL * MILLISECONDS_TO_SECONDS;
-                if(Annotation.getAnnotationAtTime(song.annotations, nextTime) != currentAnnotation) {
+                if(Annotation.getAnnotationAtTime(song.annotations, nextTime) != currentAnnotation || nextTime > duration) {
                     currentPlayer.seekTo(currentAnnotation.start);
                     return;
                 }
