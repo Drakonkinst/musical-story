@@ -106,6 +106,13 @@ const PlayerManager = (function () {
             }
             currentTime = time;
             Annotation.viewAnnotationAtTime(song.annotations, time);
+            
+            // set song link to time, rounded down
+            if(song.type === "YT") {
+                $(".song-title").attr("href", song.songURL + "&t=" + ~~time);
+            } else if(song.type === "SC") {
+                $(".song-title").attr("href", song.songURL + "#t=" + ~~time);
+            }
         });
         updateProgressDisplay();
     }
@@ -130,7 +137,6 @@ const PlayerManager = (function () {
             console.log("Failed to locate localStorage");
             return;
         }
-
 
         let compressed = localStorage.getItem("playlists");
         let playlistsStr = Utils.decompressData(compressed);
@@ -465,6 +471,7 @@ const PlayerManager = (function () {
         //let url = song.songURL;
         $("<a>").attr("href", song.songURL)
             .text(song.name)
+            .addClass("song-title")
             .attr("target", "_blank")
             .on("click", function () {
                 // when clicked, pauses song to prevent overlap
@@ -477,6 +484,7 @@ const PlayerManager = (function () {
 
         $("<a>").attr("href", song.authorURL)
             .text(song.author)
+            .addClass("song-author")
             .attr("target", "_blank")
             .appendTo(songAuthor);
 

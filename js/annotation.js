@@ -69,7 +69,7 @@ const Annotation = (function () {
         easyMDE = new EasyMDE({
             element: $(".annotation-editor-textarea")[0],
             placeholder: "Type here...",
-            toolbar: ["bold", "italic", "heading", "|",
+            toolbar: ["undo", "redo", "|", "bold", "italic", "heading", "|",
                 "code", "quote", "unordered-list", "ordered-list", "|",
                 "link", "image", "table", "horizontal-rule", "|",
                 {
