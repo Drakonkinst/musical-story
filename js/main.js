@@ -104,8 +104,12 @@ const PlayerManager = (function () {
                     return;
                 }
             }
-            currentTime = time;
-            Annotation.viewAnnotationAtTime(song.annotations, time);
+            
+            if(Input.getDragTask() !== "progress") {
+                currentTime = time;
+            }
+
+            Annotation.viewAnnotationAtTime(song.annotations, currentTime);
             
             // set song link to time, rounded down
             if(song.type === "YT") {
@@ -374,12 +378,28 @@ const PlayerManager = (function () {
     function setLoopState(val) {
         loopState = val;
     }
-
+    
+    function setCurrentTime(time) {
+        currentTime = time;
+    }
+    
     function attemptRemoveCurrentSong() {
         Input.createConfirmDialog("Are you sure you want to remove this song?",
             "It will be deleted from this playlist forever (a very long time!)",
             removeCurrentSong,
             function () { },
+        );
+    }
+    
+    function attemptRemoveCurrentPlaylist() {
+        if(playlists.length <= 1) {
+            // TODO: Display error: Cannot delete only playlist
+            console.log("Cannot remove only playlist!");
+            return;
+        }
+        Input.createConfirmDialog("Are you sure you want to remove this playlist?",
+            "It will be deleted FOREVER (a very long time!)",
+            removeCurrentPlaylist, function() {}
         );
     }
 
@@ -400,6 +420,11 @@ const PlayerManager = (function () {
         saveAll();
         playSong(songList[songIndex]);
         updatePlaylistProgress();
+    }
+    
+    function removeCurrentPlaylist() {
+        // TODO remove current, move to new -> should always exist
+        console.log("Removing current playlist!");
     }
 
     function addAnnotation() {
@@ -618,7 +643,9 @@ const PlayerManager = (function () {
         setVolume,
         setAutoPlay,
         setLoopState,
+        setCurrentTime,
         attemptRemoveCurrentSong,
+        attemptRemoveCurrentPlaylist,
         addAnnotation,
         removeAnnotation,
         setAnnotationEnd,

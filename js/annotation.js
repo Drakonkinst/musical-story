@@ -2,7 +2,9 @@
 
 const Annotation = (function () {
     const AUTOSAVE_INTERVAL = 5000;
+    const CHANGE_INTERVAL = 100;
     let easyMDE;
+    let lastChange = new Date().getTime();
     let lastAnnotationIndex = -1;
 
     /* HELPERS */
@@ -186,6 +188,7 @@ const Annotation = (function () {
         if(!annotationList) {
             return -1;
         }
+        
         let index = binarySearch(annotationList, 0, annotationList.length - 1, time);
         if(index < 0) {
             return -1;
@@ -251,6 +254,12 @@ const Annotation = (function () {
     }
     
     function viewAnnotationAtTime(annotationList, time) {
+        let now = new Date().getTime();
+        if(lastChange + CHANGE_INTERVAL > now) {
+            return;
+        }
+        
+        lastChange = now;
         // should also call onTimeUpdate() to switch annotations if needed?
         let index = getAnnotationIndexAtTime(annotationList, time);
 

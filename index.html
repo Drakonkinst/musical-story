@@ -49,8 +49,12 @@
   </div>
 
   <div class="content">
-    <div class="confirm-dialog">
+    <div class="dialog confirm-dialog">
       <div class="confirm-dialog-text"></div>
+    </div>
+    <div class="dialog text-dialog">
+      <div class="text-dialog-text"></div>
+      <textarea class="text-dialog-input"></textarea>
     </div>
     <div class="search">
       <div class="search-bar-container">
@@ -87,6 +91,12 @@
       <p>Playlist Progress: <span class="playlist-progress">0 / 0</span></p>
       <p>Playlist Controls:</p>
       <button onclick="PM.attemptRemoveCurrentSong()">Remove Song</button>
+      <button onclick="Input.exportSong()">Export Song</button>
+      <button onclick="Input.importSong()">Import Song</button>
+      <br>
+      <button onclick="PM.attemptRemoveCurrentPlaylist()">Remove Playlist</button>
+      <button onclick="Input.exportPlaylist()">Export Playlist</button>
+      <button onclick="Input.importPlaylist()">Import Playlist</button>
       
       <!--<p> Annotation Controls</p>-->
       <p>Annotation Controls:</p>

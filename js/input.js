@@ -48,6 +48,33 @@ const Input = (function() {
         });
     }
     
+    function createTextDialog(title, message, doneCallback, placeholder, initialValue, editable) {
+        doneCallback = doneCallback || function() {};
+        $(".text-dialog-text").text(message);
+        $(".text-dialog").dialog({
+            resizable: false,
+            draggable: false,
+            title: title,
+            height: "auto",
+            modal: true,
+            width: 500,
+            buttons: {
+                'OK': function () {
+                    var code = $(".text-dialog-input").val();
+                    doneCallback(code);
+                    $(this).dialog('close');
+                },
+                'Cancel': function () {
+                    $(this).dialog('close');
+                }
+            }
+        });
+        $(".text-dialog-input").attr("readonly", !editable).attr("placeholder", placeholder).val(initialValue);
+        if($(".text-dialog-input").val().length > 0) {
+            $(".text-dialog-input").select();
+        }
+    }
+    
     // not the most elegant way to do things but ah well
     function setVolumeSlider(percent) {
         $(".volume-slider").val(percent);
@@ -80,16 +107,21 @@ const Input = (function() {
     }
     
     function createProgressControls() {
-        $(".progress-bar-background").on("click", function(e) {
-            
-        }).on("mousedown", function(e) {
+        const THRESHOLD = 0.00001;
+        let lastProgress = -1;
+        let wasPlaying = false;
+        
+        $(".progress-bar-background").on("click", function (e) {
+
+        }).on("mousedown", function (e) {
             isDragging = true;
             dragTask = "progress";
+            PM.getPlayer().isPaused(function (paused) {
+                wasPlaying = !paused;
+            });
             return false;
         });
         
-        const THRESHOLD = 0.00001;
-        let lastProgress = -1;
         function setVideoProgress(progress, allowSeekAhead, isFromDragging) {
             if(Math.abs(progress - lastProgress) < THRESHOLD) {
                 lastProgress = progress;
@@ -106,6 +138,7 @@ const Input = (function() {
                 nextDragUpdate = Date.now() + DRAG_UPDATE_INTERVAL;
             }
             PM.getPlayer().seekTo(progress * PM.getDuration(), allowSeekAhead);
+            PM.setCurrentTime(progress * PM.getDuration());
         }
         
         $(window).on("mousemove", function(e) {
@@ -116,7 +149,7 @@ const Input = (function() {
             let el = $(".progress-bar-background");
             let posX = e.pageX - el.offset().left;
             let progress = clamp(posX / el.width(), 0.0, 1.0);
-
+            
             setVideoProgress(progress, false, true);                
         }).on("mouseup", function(e) {
             if(!isDragging || dragTask !== "progress") {
@@ -128,7 +161,12 @@ const Input = (function() {
             let progress = clamp(posX / el.width(), 0.0, 1.0);
 
             setVideoProgress(progress, true, false);
-            resetDragging(); 
+            resetDragging();
+            
+            if(wasPlaying) {
+                PM.getPlayer().play();
+            }
+            PM.getPlayer().seekTo(PM.getCurrentTime());
         });
         
         $(window).on("blur", function() {
@@ -139,6 +177,45 @@ const Input = (function() {
     function createControls() {
         createVolumeSlider();
         createProgressControls();
+    }
+    
+    /* EXPORT / IMPORT */
+    function exportPlaylist() {
+        let currentPlaylist = PM.getCurrentPlaylist();
+        createTextDialog("Export Playlist", "Copy-paste this code somewhere safe!", null, "", Utils.utf8ToBase64(JSON.stringify(currentPlaylist)), false);
+    }
+    
+    function importPlaylist() {
+        createTextDialog("Import Playlist", "Paste your playlist code here!", function(code) {
+            try {
+                let playlist = JSON.parse(Utils.base64ToUtf8(code));
+                if(playlist != null) {
+                    console.log(playlist);
+                }
+            } catch(err) {
+                // TODO: Display error instead of/in addition to printing it to console
+                console.error(err);
+            }
+        }, "Playlist code", "", true);
+    }
+    
+    function exportSong() {
+        let currentSong = PM.getCurrentSong();
+        createTextDialog("Export Song", "Copy-paste this code somewhere safe!", null, "", Utils.utf8ToBase64(JSON.stringify(currentSong)), false);
+    }
+    
+    function importSong() {
+        createTextDialog("Import Song", "Paste your song code here!", function (code) {
+            try {
+                let song = JSON.parse(Utils.base64ToUtf8(code));
+                if(song != null) {
+                    PM.addSongToCurrentPlaylist(song);
+                }
+            } catch(err) {
+                // TODO: Display error instead of/in addition to printing it to console
+                console.error(err);
+            }
+        }, "Song code", "", true);
     }
     
     /* ACCESSORS */
@@ -152,9 +229,14 @@ const Input = (function() {
     
     return {
         createConfirmDialog,
+        createTextDialog,
         createControls,
         setVolumeSlider,
         isDraggingMouse,
-        getDragTask
+        getDragTask,
+        exportPlaylist,
+        importPlaylist,
+        exportSong,
+        importSong
     };
 })();
