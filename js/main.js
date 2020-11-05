@@ -85,7 +85,7 @@ const PlayerManager = (function () {
             return;
         }
 
-        if(autoPlay) {
+        if(autoPlay && Input.canChangeSong()) {
             nextSong();
         }
     }
@@ -383,26 +383,6 @@ const PlayerManager = (function () {
         currentTime = time;
     }
     
-    function attemptRemoveCurrentSong() {
-        Input.createConfirmDialog("Are you sure you want to remove this song?",
-            "It will be deleted from this playlist forever (a very long time!)",
-            removeCurrentSong,
-            function () { },
-        );
-    }
-    
-    function attemptRemoveCurrentPlaylist() {
-        if(playlists.length <= 1) {
-            // TODO: Display error: Cannot delete only playlist
-            console.log("Cannot remove only playlist!");
-            return;
-        }
-        Input.createConfirmDialog("Are you sure you want to remove this playlist?",
-            "It will be deleted FOREVER (a very long time!)",
-            removeCurrentPlaylist, function() {}
-        );
-    }
-
     function removeCurrentSong() {
         currentPlayer.pause();
         let songList = getCurrentPlaylist().songList;
@@ -622,6 +602,9 @@ const PlayerManager = (function () {
     }
 
     return {
+        MAX_SONG_DESCRIPTION_LENGTH,
+        MAX_SONG_AUTHOR_LENGTH,
+        MAX_SONG_TITLE_LENGTH,
         init,
         onPlayerReady,
         onSongFinish,
@@ -644,13 +627,15 @@ const PlayerManager = (function () {
         setAutoPlay,
         setLoopState,
         setCurrentTime,
-        attemptRemoveCurrentSong,
-        attemptRemoveCurrentPlaylist,
         addAnnotation,
         removeAnnotation,
         setAnnotationEnd,
         getCurrentAnnotation,
         resetAnnotationEnd,
+        setSongInfoDisplay,
+        
+        removeCurrentSong,
+        removeCurrentPlaylist,
 
         setProgressDisplay,
         getPlayer,

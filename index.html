@@ -56,6 +56,27 @@
       <div class="text-dialog-text"></div>
       <textarea class="text-dialog-input"></textarea>
     </div>
+    <div class="dialog song-edit-dialog">
+      <p>Title*</p>
+      <input type="text" class="song-edit-title" placeholder="Song title" spellcheck=false></input>
+      <p>Author*</p>
+      <input type="text" class="song-edit-author" placeholder="Song author" spellcheck=false></input>
+      <p>Image</p>
+      <input type="text" class="song-edit-image" placeholder="Song image URL (Optional)" spellcheck=false></input>
+      <p>Description</p>
+      <textarea type="text" class="song-edit-description" placeholder="Song description (Optional)" spellcheck=false></textarea>
+    </div>
+    <div class="dialog playlist-edit-dialog">
+      <p>Title*</p>
+      <input type="text" class="playlist-edit-title" placeholder="Playlist title" spellcheck=false></input>
+      <p>Author*</p>
+      <input type="text" class="playlist-edit-author" placeholder="Playlist author" spellcheck=false></input>
+      <p>Image</p>
+      <input type="text" class="playlist-edit-image" placeholder="Playlist image URL (Optional)" spellcheck=false></input>
+      <p>Description</p>
+      <textarea type="text" class="playlist-edit-description" placeholder="Playlist description (Optional)"
+        spellcheck=false></textarea>
+    </div>
     <div class="search">
       <div class="search-bar-container">
         <p>Search for music:</p>
@@ -67,6 +88,7 @@
         <div class="search-results"></div>
       </div>
     </div>
+    
     <div class="display">
       <!--<div class="percent-display"></div>-->
       <div class="song-info">
@@ -74,6 +96,44 @@
         <div class="song-title-container"></div>
         <div class="song-author-container"></div>
       </div>
+      
+      <div class="controls">
+        <p>Playlist Progress: <span class="playlist-progress">0 / 0</span></p>
+        <p>Playlist Controls:</p>
+        <button onclick="Input.removeCurrentSong()">Remove Song</button>
+        <button onclick="Input.exportSong()">Export Song</button>
+        <button onclick="Input.importSong()">Import Song</button>
+        <button onclick="Input.editCurrentSong()">Edit Song</button>
+        <br>
+        <button onclick="Input.removeCurrentPlaylist()">Remove Playlist</button>
+        <button onclick="Input.exportPlaylist()">Export Playlist</button>
+        <button onclick="Input.importPlaylist()">Import Playlist</button>
+      
+        <!--<p> Annotation Controls</p>-->
+        <p>Annotation Controls:</p>
+        <button onclick="PM.addAnnotation()">Add Annotation</button>
+        <button onclick="PM.removeAnnotation()">Remove Annotation</button>
+        <button onclick="PM.setAnnotationEnd()">Set Annotation End</button>
+        <button onclick="PM.resetAnnotationEnd()">Reset Annotation End</button>
+        <br>
+        <button onclick="Annotation.setEditMode(true)">Edit Mode On</button>
+        <button onclick="Annotation.setEditMode(false)">Edit Mode Off (Save)</button>
+        <p>Player Controls:</p>
+        <button onclick="PM.getPlayer().play()">Play</button>
+        <button onclick="PM.getPlayer().pause()">Pause</button>
+        <button onclick="PM.prevSong()">Prev</button>
+        <button onclick="PM.nextSong()">Next</button>
+        <button onclick="PM.setMute(true)">Mute</button>
+        <button onclick="PM.setMute(false)">Unmute</button>
+        <br>
+        <button onclick="PM.setAutoPlay(true)">Autoplay On</button>
+        <button onclick="PM.setAutoPlay(false)">Autoplay Off</button>
+        <button onclick="PM.setLoopState(0)">Loop None</button>
+        <button onclick="PM.setLoopState(1)">Loop Current</button>
+        <button onclick="PM.setLoopState(2)">Loop Playlist</button>
+        <button onclick="PM.setLoopState(3)">Loop Annotation</button>
+      </div>
+      
       <div class="progress"></div>
       <div class="progress-bar-container">
         <div class="progress-bar-background">
@@ -82,46 +142,13 @@
         </div>
       </div>
     </div>
+    
     <div class="annotation-container">
       <div class="annotation-editor">
         <textarea class="annotation-editor-textarea"></textarea>
       </div>
     </div>
-    <div class="controls">
-      <p>Playlist Progress: <span class="playlist-progress">0 / 0</span></p>
-      <p>Playlist Controls:</p>
-      <button onclick="PM.attemptRemoveCurrentSong()">Remove Song</button>
-      <button onclick="Input.exportSong()">Export Song</button>
-      <button onclick="Input.importSong()">Import Song</button>
-      <br>
-      <button onclick="PM.attemptRemoveCurrentPlaylist()">Remove Playlist</button>
-      <button onclick="Input.exportPlaylist()">Export Playlist</button>
-      <button onclick="Input.importPlaylist()">Import Playlist</button>
-      
-      <!--<p> Annotation Controls</p>-->
-      <p>Annotation Controls:</p>
-      <button onclick="PM.addAnnotation()">Add Annotation</button>
-      <button onclick="PM.removeAnnotation()">Remove Annotation</button>
-      <button onclick="PM.setAnnotationEnd()">Set Annotation End</button>
-      <button onclick="PM.resetAnnotationEnd()">Reset Annotation End</button>
-      <br>
-      <button onclick="Annotation.setEditMode(true)">Edit Mode On</button>
-      <button onclick="Annotation.setEditMode(false)">Edit Mode Off (Save)</button>
-      <p>Player Controls:</p>
-      <button onclick="PM.getPlayer().play()">Play</button>
-      <button onclick="PM.getPlayer().pause()">Pause</button>
-      <button onclick="PM.prevSong()">Prev</button>
-      <button onclick="PM.nextSong()">Next</button>
-      <button onclick="PM.setMute(true)">Mute</button>
-      <button onclick="PM.setMute(false)">Unmute</button>
-      <br>
-      <button onclick="PM.setAutoPlay(true)">Autoplay On</button>
-      <button onclick="PM.setAutoPlay(false)">Autoplay Off</button>
-      <button onclick="PM.setLoopState(0)">Loop None</button>
-      <button onclick="PM.setLoopState(1)">Loop Current</button>
-      <button onclick="PM.setLoopState(2)">Loop Playlist</button>
-      <button onclick="PM.setLoopState(3)">Loop Annotation</button>
-    </div>
+    
     
     
   </div>

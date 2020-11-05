@@ -7,6 +7,10 @@ p {
     margin: 10px 0;
 }
 
+textarea {
+    resize: none;
+}
+
 .content {
     position: relative;
     padding: 40px;
@@ -217,6 +221,19 @@ img[src*="wrap"] {
 /* DIALOGS */
 .dialog {
     display: none;
+}
+
+.song-edit-dialog input {
+    width: 450px;    
+}
+
+.song-edit-dialog textarea {
+    width: 450px;
+    height: 200px;
+}
+
+.ui-dialog {
+    position: fixed;
 }
 
 .text-dialog-input {

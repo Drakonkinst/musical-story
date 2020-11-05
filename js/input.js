@@ -7,6 +7,7 @@ const Input = (function() {
     let isDragging = false;
     let dragTask = "";
     let nextDragUpdate = 0;
+    let canSongChange = true;
     
     /* HELPERS */
     function clamp(num, min, max) {
@@ -23,7 +24,6 @@ const Input = (function() {
         dragTask = "";
     }
     
-    /* CREATE UI */
     function createConfirmDialog(title, message, yesCallback, noCallback) {
         yesCallback = yesCallback || function () { };
         noCallback = noCallback || function () { };
@@ -36,20 +36,20 @@ const Input = (function() {
             modal: true,
             width: 500,
             buttons: {
-                "Cancel": function() {
+                "Cancel": function () {
                     $(this).dialog("close");
                     noCallback();
                 },
-                "Confirm": function() {
+                "Confirm": function () {
                     $(this).dialog("close");
                     yesCallback();
                 }
             }
         });
     }
-    
+
     function createTextDialog(title, message, doneCallback, placeholder, initialValue, editable) {
-        doneCallback = doneCallback || function() {};
+        doneCallback = doneCallback || function () { };
         $(".text-dialog-text").text(message);
         $(".text-dialog").dialog({
             resizable: false,
@@ -69,11 +69,134 @@ const Input = (function() {
                 }
             }
         });
-        $(".text-dialog-input").attr("readonly", !editable).attr("placeholder", placeholder).val(initialValue);
-        if($(".text-dialog-input").val().length > 0) {
-            $(".text-dialog-input").select();
+        let input = $(".text-dialog-input");
+        input.attr("readonly", !editable)
+            .attr("placeholder", placeholder)
+            .val(initialValue);
+        if(input.val().length > 0) {
+            input.select();
         }
     }
+    
+    function validateInput(input) {
+        if(typeof input === "string") {
+            console.log(input);
+            return input != null && input.length > 0;
+        } else {
+            // array
+            for(let i of input) {
+                let result = validateInput(i);
+                if(!result) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    
+    /* DIALOGS */
+    function exportPlaylist() {
+        let currentPlaylist = PM.getCurrentPlaylist();
+        createTextDialog("Export Playlist", "Copy-paste this code somewhere safe!", null, "", Utils.utf8ToBase64(JSON.stringify(currentPlaylist)), false);
+    }
+
+    function importPlaylist() {
+        createTextDialog("Import Playlist", "Paste your playlist code here!", function (code) {
+            try {
+                let playlist = JSON.parse(Utils.base64ToUtf8(code));
+                if(playlist != null) {
+                    console.log(playlist);
+                }
+            } catch(err) {
+                // TODO: Display error instead of/in addition to printing it to console
+                console.error(err);
+            }
+        }, "Playlist code", "", true);
+    }
+
+    function exportSong() {
+        let currentSong = PM.getCurrentSong();
+        createTextDialog("Export Song", "Copy-paste this code somewhere safe!", null, "", Utils.utf8ToBase64(JSON.stringify(currentSong)), false);
+    }
+
+    function importSong() {
+        createTextDialog("Import Song", "Paste your song code here!", function (code) {
+            try {
+                let song = JSON.parse(Utils.base64ToUtf8(code));
+                if(song != null) {
+                    PM.addSongToCurrentPlaylist(song);
+                }
+            } catch(err) {
+                // TODO: Display error instead of/in addition to printing it to console
+                console.error(err);
+            }
+        }, "Song code", "", true);
+    }
+
+    function removeCurrentSong() {
+        createConfirmDialog("Are you sure you want to remove this song?",
+            "It will be deleted from this playlist forever (a very long time!)",
+            PM.removeCurrentSong,
+            function () { },
+        );
+    }
+
+    function removeCurrentPlaylist() {
+        if(playlists.length <= 1) {
+            // TODO: Display error: Cannot delete only playlist
+            console.log("Cannot remove only playlist!");
+            return;
+        }
+        createConfirmDialog("Are you sure you want to remove this playlist?",
+            "It will be deleted FOREVER (a very long time!)",
+            PMremoveCurrentPlaylist, function () { }
+        );
+    }
+    
+    // temporarily in dialogs for now
+    function editCurrentSong() {
+        let song = PM.getCurrentSong();
+        if(song == null) {
+            return;
+        }
+        let songTitle = $(".song-edit-title").attr("maxlength", PM.MAX_SONG_TITLE_LENGTH).val(song.name);
+        let songAuthor = $(".song-edit-author").attr("maxlength", PM.MAX_SONG_AUTHOR_LENGTH).val(song.author);
+        let songImage = $(".song-edit-image").val(song.image);
+        let songDescription = $(".song-edit-description").attr("maxlength", PM.MAX_SONG_DESCRIPTION_LENGTH).val(song.description);
+        $(".song-edit-dialog").dialog({
+            resizable: false,
+            draggable: false,
+            title: "Edit Song Info",
+            height: "auto",
+            modal: true,
+            width: 500,
+            buttons: {
+                'Save': function () {
+                    //songImage and songDescription can be blank without consequence
+                    if(validateInput([songTitle.val(), songAuthor.val()])) {
+                        song.name = songTitle.val();
+                        song.author = songAuthor.val();
+                        song.image = songImage.val();
+                        song.description = songDescription.val();
+                        
+                        PM.setSongInfoDisplay(song);
+                        PM.saveAll();
+                    }
+                    
+                    $(this).dialog('close');
+                },
+                'Cancel': function () {
+                    $(this).dialog('close');
+                }
+            }
+        });
+        
+        function editPlaylist() {
+            let playlist = PM.getCurrentPlaylist();
+        }
+    }
+    
+    /* CREATE UI */
     
     // not the most elegant way to do things but ah well
     function setVolumeSlider(percent) {
@@ -179,45 +302,6 @@ const Input = (function() {
         createProgressControls();
     }
     
-    /* EXPORT / IMPORT */
-    function exportPlaylist() {
-        let currentPlaylist = PM.getCurrentPlaylist();
-        createTextDialog("Export Playlist", "Copy-paste this code somewhere safe!", null, "", Utils.utf8ToBase64(JSON.stringify(currentPlaylist)), false);
-    }
-    
-    function importPlaylist() {
-        createTextDialog("Import Playlist", "Paste your playlist code here!", function(code) {
-            try {
-                let playlist = JSON.parse(Utils.base64ToUtf8(code));
-                if(playlist != null) {
-                    console.log(playlist);
-                }
-            } catch(err) {
-                // TODO: Display error instead of/in addition to printing it to console
-                console.error(err);
-            }
-        }, "Playlist code", "", true);
-    }
-    
-    function exportSong() {
-        let currentSong = PM.getCurrentSong();
-        createTextDialog("Export Song", "Copy-paste this code somewhere safe!", null, "", Utils.utf8ToBase64(JSON.stringify(currentSong)), false);
-    }
-    
-    function importSong() {
-        createTextDialog("Import Song", "Paste your song code here!", function (code) {
-            try {
-                let song = JSON.parse(Utils.base64ToUtf8(code));
-                if(song != null) {
-                    PM.addSongToCurrentPlaylist(song);
-                }
-            } catch(err) {
-                // TODO: Display error instead of/in addition to printing it to console
-                console.error(err);
-            }
-        }, "Song code", "", true);
-    }
-    
     /* ACCESSORS */
     function isDraggingMouse() {
         return isDragging;
@@ -225,6 +309,10 @@ const Input = (function() {
     
     function getDragTask() {
         return dragTask;
+    }
+    
+    function canChangeSong() {
+        return canSongChange;
     }
     
     return {
@@ -237,6 +325,10 @@ const Input = (function() {
         exportPlaylist,
         importPlaylist,
         exportSong,
-        importSong
+        importSong,
+        removeCurrentPlaylist,
+        removeCurrentSong,
+        canChangeSong,
+        editCurrentSong
     };
 })();
