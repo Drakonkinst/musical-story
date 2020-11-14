@@ -16,8 +16,6 @@ const YTVideoPlayer = (function () {
     }
 
     function initPlayer() {
-        //let firstVideoID = extractIdFromURL(songList[songIndex]);
-        //setCurrentId(firstVideoID);
         player = new YT.Player("ytplayer", {
             height: "600",
             width: "600",
@@ -35,12 +33,6 @@ const YTVideoPlayer = (function () {
     }
 
     function onPlayerStateChange(event) {
-        // if video starts playing, after 3 seconds, stops the video
-        /*
-        if(event.data == YT.PlayerState.PLAYING && !done) {
-            setTimeout(stopVideo, 3000);
-            done = true;
-        }*/
         if(event.data === YT.PlayerState.ENDED) {
             PM.onSongFinish();
         }
@@ -53,8 +45,6 @@ const YTVideoPlayer = (function () {
         
         lastState = event.data;
     }
-
-    /* CONTROLS */
 
     /* PLAYER METHODS */
     function play() {
@@ -97,12 +87,14 @@ const YTVideoPlayer = (function () {
     }
     
     function setPlaybackSpeed(number) {
-        
+        player.setPlaybackSpeed(number);
     }
 
     function getVolume(callback) {
         if(!player.getVolume) {
-            callback(-1);
+            if(callback) {
+                callback(-1);
+            }
             return -1;
         }
         let val = player.getVolume();
@@ -116,7 +108,11 @@ const YTVideoPlayer = (function () {
 
     function isPaused(callback) {
         let flag = player.getPlayerState() !== YT.PlayerState.PLAYING;
-        callback(flag);
+        
+        if(callback) {
+            callback(flag);
+        }
+        
         return flag;
     }
 
@@ -126,13 +122,21 @@ const YTVideoPlayer = (function () {
 
     function getDuration(callback) {
         let duration = player.getDuration();
-        callback(duration);
+        
+        if(callback) {
+            callback(duration);
+        }
+        
         return duration;
     }
 
     function getCurrentTime(callback) {
         let time = player.getCurrentTime();
-        callback(time);
+        
+        if(callback) {
+            callback(time);
+        }
+        
         return time;
     }
 

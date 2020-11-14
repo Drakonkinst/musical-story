@@ -44,11 +44,13 @@
 
   <div id="ytplayer"></div>
   <div class="scplayer-container">
+    <!-- If you're wondering, this is the default video https://soundcloud.com/qu4ntum-sounds/qu4ntum-playground-free-download -->
     <iframe id="scplayer" width="1" height="1" scrolling="no" frameborder="no" allow="autoplay"
-      src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/501938133"></iframe>
+      src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/893564704"></iframe>
   </div>
 
   <div class="content">
+    <!-- DIALOGS -->
     <div class="dialog confirm-dialog">
       <div class="confirm-dialog-text"></div>
     </div>
@@ -77,6 +79,8 @@
       <textarea type="text" class="playlist-edit-description" placeholder="Playlist description (Optional)"
         spellcheck=false></textarea>
     </div>
+    
+    <!-- REGULAR STUFF -->
     <div class="search">
       <div class="search-bar-container">
         <p>Search for music:</p>
@@ -118,6 +122,11 @@
         <br>
         <button onclick="Annotation.setEditMode(true)">Edit Mode On</button>
         <button onclick="Annotation.setEditMode(false)">Edit Mode Off (Save)</button>
+        <br>
+      <button onclick="PM.getCurrentAnnotation(function(a){delete a.color; Annotation.updateAnnotationDisplay()})">Reset Color</button>
+      <button onclick="PM.getCurrentAnnotation(function(a){a.color = '#ffabab'; Annotation.updateAnnotationDisplay()})">Set Color to Red</button>
+      <button onclick="PM.getCurrentAnnotation(function(a){a.color = '#bffcc6'; Annotation.updateAnnotationDisplay()})">Set Color to Green</button>
+      <button onclick="PM.getCurrentAnnotation(function(a){a.color = '#6eb5ff'; Annotation.updateAnnotationDisplay()})">Set Color to Blue</button>
         <p>Player Controls:</p>
         <button onclick="PM.getPlayer().play()">Play</button>
         <button onclick="PM.getPlayer().pause()">Pause</button>
@@ -148,9 +157,6 @@
         <textarea class="annotation-editor-textarea"></textarea>
       </div>
     </div>
-    
-    
-    
   </div>
 
   <!--<script src="js/lib/modernizr-3.8.0.min.js"></script>-->

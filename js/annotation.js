@@ -224,7 +224,7 @@ const Annotation = (function () {
             let start = annotation.start;
             let end = annotation.end;
             lastTimestamp = addGapSegmentIfNeeded(start, end, lastTimestamp, duration, annotationBar);
-            lastTimestamp = addAnnotationSegment(start, lastTimestamp, duration, annotationBar);
+            lastTimestamp = addAnnotationSegment(start, lastTimestamp, duration, annotationBar, annotation.color);
         }
     }
 
@@ -237,14 +237,17 @@ const Annotation = (function () {
         return lastTimestamp;
     }
 
-    function addAnnotationSegment(start, lastTimestamp, duration, annotationBar) {
+    function addAnnotationSegment(start, lastTimestamp, duration, annotationBar, color) {
         let time = lastTimestamp - start;
-        addSegment("annotation-bar-item", (time / duration) * 100, annotationBar);
+        let segment = addSegment("annotation-bar-item", (time / duration) * 100, annotationBar);
+        if(color) {
+            segment.css("background", color);
+        }
         return start;
     }
 
     function addSegment(class_, percentWidth, parent) {
-        $("<div>").addClass(class_)
+        return $("<div>").addClass(class_)
             .width(percentWidth + "%")
             .appendTo(parent);
     }
@@ -271,13 +274,11 @@ const Annotation = (function () {
         setEditMode(false);
 
         if(index < 0) {
-            //console.log("Clearing content");
             lastAnnotationIndex = -1;
             easyMDE.value("");
             return;
         }
 
-        //console.log("Setting new content");
         easyMDE.value(annotationList[index].text);
         lastAnnotationIndex = index;
     }

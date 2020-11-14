@@ -10,36 +10,14 @@ const SCPlayer = (function() {
     let lastVolume = 50;
     let muted = false;
     
+    /* INIT */
     function init() {
         widget = SCWidget("scplayer");
         widget.bind(SCWidget.Events.READY, onPlayerReady);
         console.log("Widget loaded!");
-        
-        /*
-        console.log("Attempting to initialize...");
-        SC.initialize({
-            client_id: "BVTnmQP4X7xo1VXiYwZTNAM9swaZthcP",
-            redirect_uri: "https://drakonkinst.github.io/musical-story/"
-        });
-        
-        console.log("Attempting to connect...");
-        SC.connect().then(function() {
-            console.log("Connected successfully!");
-            
-        }).catch(function(err) {
-            console.log("Something went wrong!");
-        });
-        
-        SC.get('/tracks', {
-            q: 'buskers', license: 'cc-by-sa'
-        }).then(function (tracks) {
-            console.log(tracks);
-        });*/
     }
     
     function onPlayerReady() {
-        //widget.play();
-        PM.onPlayerReady("SC");
         widget.bind(SCWidget.Events.PLAY, function () {
             // Soundcloud sometimes likes to play when it's not its turn
             // This stops that
@@ -52,20 +30,12 @@ const SCPlayer = (function() {
         widget.bind(SCWidget.Events.FINISH, function() {
             PM.onSongFinish();
         });
-    }
-    
-    function checkName() {
-        widget.getCurrentSound(function(music) {
-            console.log("Now Playing: " + music.title);
-            console.log("by " + music.user.permalink + " (" + music.user.full_name + ")");
-            console.log(music.description);
-
-        });
+        
+        PM.onPlayerReady("SC");
     }
     
     /* PLAYER METHODS */
     function play() {
-        //console.log("SC: Play command called");
         widget.play();
     }
     
@@ -115,7 +85,10 @@ const SCPlayer = (function() {
     }
     
     function getVolume(callback) {
-        return widget.getVolume(callback);
+        if(callback) {
+            widget.getVolume(callback);
+        }
+        
     }
     
     function isMuted() {
@@ -123,25 +96,29 @@ const SCPlayer = (function() {
     }
     
     function isPaused(callback) {
-        return widget.isPaused(callback);
+        if(callback) {
+            return widget.isPaused(callback);
+        }
     }
     
     function getDuration(callback) {
         return widget.getDuration(function(timeMS) {
-            callback(timeMS * MILLISECONDS_TO_SECONDS);
+            if(callback) {
+                callback(timeMS * MILLISECONDS_TO_SECONDS);
+            }
         });
     }
     
     function getCurrentTime(callback) {
         return widget.getPosition(function(timeMS) {
-            callback(timeMS * MILLISECONDS_TO_SECONDS);
+            if(callback) {
+                callback(timeMS * MILLISECONDS_TO_SECONDS);
+            }
         });
     }
     
     return {
         init,
-        checkName,
-        
         play,
         pause,
         loadSongByURL,

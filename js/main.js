@@ -438,6 +438,10 @@ const PlayerManager = (function () {
     }
 
     function getCurrentAnnotation(callback) {
+        if(!callback) {
+            return;
+        }
+        
         let song = getCurrentSong();
         if(!song.annotations) {
             callback(null);

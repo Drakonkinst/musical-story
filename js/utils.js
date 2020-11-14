@@ -1,4 +1,9 @@
 const Utils = (function() {
+    /**
+     * Returns a duration in HH:MM:SS format given a number of seconds.
+     * @param {number}  seconds The number of seconds.
+     * @return {string} duration string
+     */
     function secondsToTimeStr(seconds) {
         seconds = Math.round(seconds);
         let hours = ~~(seconds / (60 * 60));
@@ -7,11 +12,12 @@ const Utils = (function() {
         seconds %= 60;
 
         let str = "";
-        const zeroes = "00";
         if(hours > 0) {
             str += hours + ":";
         }
-        str += minutes + ":" + (zeroes + seconds).slice(-2);
+        
+        // formats seconds to always be 2 digits long
+        str += minutes + ":" + ("00" + seconds).slice(-2);
         return str;
     }
     
