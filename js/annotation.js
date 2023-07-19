@@ -3,6 +3,7 @@
 const Annotation = (function () {
     const AUTOSAVE_INTERVAL = 5000;
     const CHANGE_INTERVAL = 100;
+    
     let easyMDE;
     let lastChange = new Date().getTime();
     let lastAnnotationIndex = -1;

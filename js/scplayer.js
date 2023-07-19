@@ -88,7 +88,6 @@ const SCPlayer = (function() {
         if(callback) {
             widget.getVolume(callback);
         }
-        
     }
     
     function isMuted() {

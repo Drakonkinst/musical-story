@@ -376,6 +376,25 @@ const PlayerManager = (function () {
     }
     
     function setLoopState(val) {
+        let msg = "";
+        switch(loopState) {
+            case LOOP_NONE:
+                msg = "none";
+                break;
+            case LOOP_ANNOTATION:
+                msg = "annotation";
+                break;
+            case LOOP_CURRENT:
+                msg = "current";
+                break;
+            case LOOP_PLAYLIST:
+                msg = "playlist";
+                break;
+            default:
+                msg = "unknown";
+                break;
+        }
+        console.log("Looping " + msg);
         loopState = val;
     }
     

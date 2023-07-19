@@ -2,7 +2,7 @@
 
 const YTVideoPlayer = (function () {
     const MIN_UNMUTE_VOLUME = 5;
-    
+
     let player;
     let lastState = -9;
 
@@ -36,13 +36,13 @@ const YTVideoPlayer = (function () {
         if(event.data === YT.PlayerState.ENDED) {
             PM.onSongFinish();
         }
-        
+
         if(event.data === YT.PlayerState.PLAYING) {
             if(lastState === YT.PlayerState.BUFFERING) {
                 PM.onSongReady();
             }
         }
-        
+
         lastState = event.data;
     }
 
@@ -54,15 +54,15 @@ const YTVideoPlayer = (function () {
     function pause() {
         player.pauseVideo();
     }
-    
+
     function loadSongByURL(url) {
         let id = Search.isValidYouTubeVideoURL(url);
-        
+
         if(!id) {
             console.log("Invalid URL!");
             return;
         }
-        
+
         player.loadVideoById(id);
     }
 
@@ -85,7 +85,7 @@ const YTVideoPlayer = (function () {
     function seekTo(seconds, allowSeekAhead) {
         player.seekTo(seconds, allowSeekAhead);
     }
-    
+
     function setPlaybackSpeed(number) {
         player.setPlaybackSpeed(number);
     }
@@ -98,21 +98,21 @@ const YTVideoPlayer = (function () {
             return -1;
         }
         let val = player.getVolume();
-        
+
         if(callback) {
             callback(val);
         }
-    
+
         return val;
     }
 
     function isPaused(callback) {
         let flag = player.getPlayerState() !== YT.PlayerState.PLAYING;
-        
+
         if(callback) {
             callback(flag);
         }
-        
+
         return flag;
     }
 
@@ -122,21 +122,21 @@ const YTVideoPlayer = (function () {
 
     function getDuration(callback) {
         let duration = player.getDuration();
-        
+
         if(callback) {
             callback(duration);
         }
-        
+
         return duration;
     }
 
     function getCurrentTime(callback) {
         let time = player.getCurrentTime();
-        
+
         if(callback) {
             callback(time);
         }
-        
+
         return time;
     }
 
